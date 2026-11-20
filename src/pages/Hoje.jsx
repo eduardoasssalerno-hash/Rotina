@@ -11,6 +11,8 @@ import LinhaTarefa, { alternarTarefa } from '../components/LinhaTarefa.jsx'
 import Habitos from '../components/Habitos.jsx'
 import Planeta from '../components/Planeta.jsx'
 import Anexos from '../components/Anexos.jsx'
+import TodosBloco from '../components/TodosBloco.jsx'
+import Feedback from '../components/Feedback.jsx'
 import { Cabecalho } from './Shell.jsx'
 
 // Hora atual, atualizada a cada minuto (para destacar o que está acontecendo agora)
@@ -73,7 +75,8 @@ export default function Hoje() {
                       ? <button type="button" className="link-titulo" onClick={() => setEditando(it.tarefa)}>{it.titulo}</button>
                       : <strong>{it.titulo}</strong>}
                     <span className="suave">{detalhe.join(' · ')}{agoraAqui ? ' · agora' : ''}</span>
-                    {it.tipo === 'tarefa' && <Anexos tarefaId={it.tarefa.id} />}
+                    {it.tipo === 'tarefa' && <span className="linha-extras"><Feedback tarefa={it.tarefa} /><Anexos tarefaId={it.tarefa.id} /></span>}
+                    {it.tipo === 'fixo' && !it.area.privada && <TodosBloco bloco={it.bloco} iso={iso} aoEditar={setEditando} />}
                   </div>
                   <button type="button" className={`btn-feito ${it.feito ? 'sim' : ''}`} aria-pressed={it.feito} onClick={() => alternar(it)}>
                     {it.feito ? <><Icone nome="check" tamanho={16} />Feito</> : 'Feito'}

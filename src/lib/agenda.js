@@ -34,7 +34,7 @@ export function itensDoDia(d, data, { comHabitos = false } = {}) {
     })
   }
   for (const t of d.tarefas) {
-    if (t.dia !== iso || !t.inicio) continue
+    if (t.dia !== iso || !t.inicio || t.bloco_id) continue
     const p = t.projeto_id ? d.projetos.find((x) => x.id === t.projeto_id) : null
     const a = infoArea(d, t.area_id || p?.area_id)
     const ini = horas(t.inicio)
@@ -62,7 +62,7 @@ export function itensDoDia(d, data, { comHabitos = false } = {}) {
 // Tarefas do dia sem horário marcado
 export function tarefasSemHora(d, data) {
   const iso = isoDia(data)
-  return d.tarefas.filter((t) => t.dia === iso && !t.inicio)
+  return d.tarefas.filter((t) => t.dia === iso && !t.inicio && !t.bloco_id)
     .sort((a, b) => Number(a.feita) - Number(b.feita) || b.prioridade - a.prioridade || a.ordem - b.ordem)
 }
 
@@ -76,4 +76,10 @@ export function horasPorArea(d, data) {
     soma.set(k, atual)
   }
   return [...soma.entries()].map(([nome, v]) => ({ nome, ...v }))
+}
+
+// To-dos de dentro de um bloco num dia (ex.: o que estudar durante as Aulas)
+export function todosDoBloco(d, blocoId, iso) {
+  return d.tarefas.filter((t) => t.bloco_id === blocoId && t.dia === iso)
+    .sort((a, b) => Number(a.feita) - Number(b.feita) || a.ordem - b.ordem || String(a.criado_em).localeCompare(String(b.criado_em)))
 }

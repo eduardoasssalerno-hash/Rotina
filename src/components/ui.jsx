@@ -20,6 +20,9 @@ const ICONES = {
   livro: <><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" /><path d="M4 19V5" /></>,
   arquivo: <><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></>,
   grafico: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>,
+  dinheiro: <><rect x="2.5" y="6" width="19" height="12" rx="2.5" /><circle cx="12" cy="12" r="2.6" /><path d="M6 9.5v5M18 9.5v5" /></>,
+  baixar: <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />,
+  estrela: <path d="m12 3.5 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.6 9.6l5.8-.8z" />,
   menu: <><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></>,
   sair: <><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" /></>,
 }

@@ -3,6 +3,7 @@ import { useDados } from '../lib/dados.jsx'
 import { fmtHora } from '../lib/util.js'
 import { Botao, Field, Icone, Modal, Segmentos } from './ui.jsx'
 import Anexos from './Anexos.jsx'
+import { TextoFeedback } from './Feedback.jsx'
 
 const PRIORIDADES = [
   { v: 0, label: 'Nenhuma' }, { v: 1, label: 'Baixa' }, { v: 2, label: 'Média' }, { v: 3, label: 'Alta' },
@@ -91,6 +92,7 @@ export default function EditorTarefa({ tarefa, padrao = {}, aoFechar }) {
           </Field>
         )}
         {tarefa && <div className="campo"><Anexos tarefaId={tarefa.id} /></div>}
+        {tarefa?.feedback_nota != null && <div className="campo"><span className="campo-rotulo">Feedback do Claude</span><TextoFeedback t={tarefa} /></div>}
         <div className="campo">
           <span className="campo-rotulo">Prioridade</span>
           <Segmentos label="Prioridade" value={t.prioridade} onChange={(v) => muda({ prioridade: v })} options={PRIORIDADES} />

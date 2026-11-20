@@ -4,6 +4,7 @@ import { horasPorArea, infoArea, itensDoDia, tarefasSemHora } from '../lib/agend
 import { addDias, DIAS, DIAS_CURTOS, dataCurta, duracao, hoje, inicioSemana, isoDia, MESES } from '../lib/util.js'
 import { Segmentos, Vazio } from '../components/ui.jsx'
 import { Cabecalho } from './Shell.jsx'
+import Feedback from '../components/Feedback.jsx'
 
 // Data local (AAAA-MM-DD) de um horário salvo no banco
 const diaLocal = (ts) => (ts ? isoDia(new Date(ts)) : null)
@@ -47,6 +48,7 @@ export default function Relatorios() {
           <ProximosDias />
         </div>
         <div className="coluna">
+          <Notas />
           <PorArea feitos={feitos} />
           <TempoReal />
         </div>
@@ -260,3 +262,26 @@ function TempoReal() {
   )
 }
 
+
+// ---------- Notas e feedback do Claude ----------
+function Notas() {
+  const { d } = useDados()
+  const lista = d.tarefas.filter((t) => t.feedback_nota != null).sort((a, b) => String(b.feedback_em).localeCompare(String(a.feedback_em)))
+  const media = lista.length ? lista.reduce((s, t) => s + Number(t.feedback_nota), 0) / lista.length : 0
+  return (
+    <section className="cartao">
+      <div className="cab-cartao"><h2>Notas das listas</h2>{lista.length > 0 && <span className="suave">média {media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</span>}</div>
+      {lista.length === 0 ? <Vazio>Quando você terminar uma lista e me mandar as respostas, a nota e o feedback aparecem aqui e na própria tarefa.</Vazio> : (
+        <ul className="tempo-real">
+          {lista.map((t) => (
+            <li key={t.id}>
+              <span className="tempo-titulo">{t.titulo}</span>
+              <span className="suave">{t.feedback_em ? dataCurta(new Date(t.feedback_em)) : ''}</span>
+              <span className="tag-nota"><Feedback tarefa={t} /></span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}

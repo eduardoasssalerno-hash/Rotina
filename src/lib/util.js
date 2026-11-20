@@ -73,3 +73,13 @@ export function msgErro(e) {
   if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sem conexão. Verifique a internet e tente de novo.'
   return m || 'Algo deu errado. Tente de novo.'
 }
+
+// R$ 1.234,56
+const fmtReal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+export const reais = (v) => fmtReal.format(Number(v) || 0)
+// "1.234,56" ou "12,5" -> 1234.56
+export function lerValor(txt) {
+  const limpo = String(txt || '').replace(/[^\d,.-]/g, '')
+  const n = limpo.includes(',') ? Number(limpo.replace(/\./g, '').replace(',', '.')) : Number(limpo)
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN
+}

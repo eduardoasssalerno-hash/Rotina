@@ -9,26 +9,34 @@ import Treino from './Treino.jsx'
 import Ajustes from './Ajustes.jsx'
 import Relatorios from './Relatorios.jsx'
 import Mais from './Mais.jsx'
+import Foco from './Foco.jsx'
+import Habitos from './Habitos.jsx'
+import Metas from './Metas.jsx'
+import Dinheiro from './Dinheiro.jsx'
 
 export const MENU = [
   { to: '/', nome: 'Hoje', icone: 'hoje' },
-  { to: '/semana', nome: 'Semana e mês', curto: 'Semana', icone: 'semana' },
+  { to: '/semana', nome: 'Semana e mês', icone: 'semana' },
   { to: '/planetas', nome: 'Planetas', icone: 'planetas' },
   { to: '/tarefas', nome: 'Tarefas', icone: 'tarefas' },
+  { to: '/foco', nome: 'Modo foco', icone: 'relogio' },
+  { to: '/habitos', nome: 'Hábitos', icone: 'check' },
+  { to: '/metas', nome: 'Metas', icone: 'bandeira' },
   { to: '/treino', nome: 'Treino', icone: 'treino' },
+  { to: '/dinheiro', nome: 'Dinheiro', icone: 'dinheiro' },
   { to: '/relatorios', nome: 'Relatórios', icone: 'grafico' },
 ]
 
-// No celular cabem 5 abas: Tarefas, Relatórios e Ajustes ficam em "Mais"
+// No celular cabem 5 abas: o resto fica em "Mais"
 const ABAS = [
   { to: '/', nome: 'Hoje', icone: 'hoje' },
   { to: '/semana', nome: 'Semana', icone: 'semana' },
   { to: '/planetas', nome: 'Planetas', icone: 'planetas' },
-  { to: '/treino', nome: 'Treino', icone: 'treino' },
-  { to: '/mais', nome: 'Mais', icone: 'menu', inclui: ['/mais', '/tarefas', '/relatorios', '/ajustes'] },
+  { to: '/dinheiro', nome: 'Dinheiro', icone: 'dinheiro' },
+  { to: '/mais', nome: 'Mais', icone: 'menu', inclui: ['/mais', '/tarefas', '/relatorios', '/ajustes', '/treino', '/foco', '/habitos', '/metas'] },
 ]
 
-const TELAS = { '/': Hoje, '/semana': Semana, '/planetas': Planetas, '/tarefas': Tarefas, '/treino': Treino, '/ajustes': Ajustes, '/relatorios': Relatorios, '/mais': Mais }
+const TELAS = { '/': Hoje, '/semana': Semana, '/planetas': Planetas, '/tarefas': Tarefas, '/treino': Treino, '/ajustes': Ajustes, '/relatorios': Relatorios, '/mais': Mais, '/foco': Foco, '/habitos': Habitos, '/metas': Metas, '/dinheiro': Dinheiro }
 
 export default function Shell({ path }) {
   const toast = useToast()
