@@ -1,0 +1,20 @@
+{
+  "tarefa_id": "dd4aec61-2f25-5011-ba76-023a03434067",
+  "arquivo": "Correcao_Exemplo",
+  "atividade": "Lista 6 (exemplo)",
+  "materia": "Microeconomia II",
+  "data": "20/11/2026",
+  "nota": 7.5,
+  "nota_portugues": 9,
+  "minutos_real": 160,
+  "bem": "Montou as árvores e achou o equilíbrio por indução retrógrada nas questões 5 e 7.",
+  "mal": "Jogos repetidos: a condição para cooperar com a estratégia do gatilho (questão 3).",
+  "questoes": [
+    {"numero": "3", "status": "errado", "pontos": "0 de 1", "enunciado": "Quando a cooperação se sustenta no jogo repetido infinitamente?",
+     "sua_resposta": "Sempre que as empresas forem pacientes.", "comentario": "Faltou a condição exata: o fator de desconto precisa ser grande o bastante.",
+     "resolucao": "1) Lucro de cooperar para sempre: R/(1−δ).\n2) Desviar uma vez e ser punido: T + δP/(1−δ).\n3) Coopera se R/(1−δ) ≥ T + δP/(1−δ), ou seja, δ ≥ (T−R)/(T−P)."},
+    {"numero": "5", "status": "certo", "pontos": "1 de 1", "sua_resposta": "(Investir, Entrar), com lucros (5, 2).", "comentario": "Começou por B e antecipou a resposta dele: exatamente a indução retrógrada."}
+  ],
+  "portugues": [{"trecho": "a empresas decide", "correcao": "as empresas decidem", "explicacao": "Concordância: sujeito no plural pede verbo no plural."}],
+  "proximos_passos": ["Refazer a questão 3 sem consultar.", "Rever a fórmula do fator de desconto antes da prova."]
+}
