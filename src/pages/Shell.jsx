@@ -7,6 +7,8 @@ import Planetas from './Planetas.jsx'
 import Tarefas from './Tarefas.jsx'
 import Treino from './Treino.jsx'
 import Ajustes from './Ajustes.jsx'
+import Relatorios from './Relatorios.jsx'
+import Mais from './Mais.jsx'
 
 export const MENU = [
   { to: '/', nome: 'Hoje', icone: 'hoje' },
@@ -14,9 +16,19 @@ export const MENU = [
   { to: '/planetas', nome: 'Planetas', icone: 'planetas' },
   { to: '/tarefas', nome: 'Tarefas', icone: 'tarefas' },
   { to: '/treino', nome: 'Treino', icone: 'treino' },
+  { to: '/relatorios', nome: 'Relatórios', icone: 'grafico' },
 ]
 
-const TELAS = { '/': Hoje, '/semana': Semana, '/planetas': Planetas, '/tarefas': Tarefas, '/treino': Treino, '/ajustes': Ajustes }
+// No celular cabem 5 abas: Tarefas, Relatórios e Ajustes ficam em "Mais"
+const ABAS = [
+  { to: '/', nome: 'Hoje', icone: 'hoje' },
+  { to: '/semana', nome: 'Semana', icone: 'semana' },
+  { to: '/planetas', nome: 'Planetas', icone: 'planetas' },
+  { to: '/treino', nome: 'Treino', icone: 'treino' },
+  { to: '/mais', nome: 'Mais', icone: 'menu', inclui: ['/mais', '/tarefas', '/relatorios', '/ajustes'] },
+]
+
+const TELAS = { '/': Hoje, '/semana': Semana, '/planetas': Planetas, '/tarefas': Tarefas, '/treino': Treino, '/ajustes': Ajustes, '/relatorios': Relatorios, '/mais': Mais }
 
 export default function Shell({ path }) {
   const toast = useToast()
@@ -56,11 +68,14 @@ function Estrutura({ path }) {
       </main>
 
       <nav className="abas" aria-label="Menu principal">
-        {MENU.map((m) => (
-          <Link key={m.to} to={m.to} className={ativo(m.to) ? 'ativo' : ''} aria-current={ativo(m.to) ? 'page' : undefined}>
-            <Icone nome={m.icone} />{m.curto || m.nome}
-          </Link>
-        ))}
+        {ABAS.map((m) => {
+          const sim = m.inclui ? m.inclui.some((r) => path.startsWith(r)) : ativo(m.to)
+          return (
+            <Link key={m.to} to={m.to} className={sim ? 'ativo' : ''} aria-current={sim ? 'page' : undefined}>
+              <Icone nome={m.icone} />{m.nome}
+            </Link>
+          )
+        })}
       </nav>
     </div>
   )

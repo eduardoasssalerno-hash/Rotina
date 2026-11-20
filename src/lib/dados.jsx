@@ -4,7 +4,7 @@ import { addDias, hoje, isoDia, msgErro } from './util.js'
 
 // Todos os dados da Ione ficam carregados na memória (é um app de uma pessoa só)
 const TABELAS = ['areas', 'projetos', 'tarefas', 'blocos_fixos', 'blocos_feitos', 'folgas',
-  'habitos', 'habito_marcas', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco']
+  'habitos', 'habito_marcas', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco', 'anexos']
 // Tabelas com muitas linhas: só o último ano
 const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', sessoes_foco: 'inicio' }
 // Tabelas sem coluna id: a linha é identificada por estas colunas

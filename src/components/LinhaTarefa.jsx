@@ -2,6 +2,7 @@ import { useDados } from '../lib/dados.jsx'
 import { infoArea } from '../lib/agenda.js'
 import { dataCurta, deIso, duracao, fmtHora } from '../lib/util.js'
 import { Bandeira, Icone } from './ui.jsx'
+import Anexos from './Anexos.jsx'
 
 export function alternarTarefa(salvar, t) {
   return salvar('tarefas', { id: t.id, feita: !t.feita, feita_em: t.feita ? null : new Date().toISOString() })
@@ -16,7 +17,8 @@ export default function LinhaTarefa({ tarefa: t, aoEditar, mostrarDia = false, m
     mostrarProjeto && p ? p.nome : !p && t.area_id ? a.nome : null,
     mostrarDia && t.dia ? dataCurta(deIso(t.dia)) : null,
     t.inicio ? fmtHora(t.inicio) : null,
-    t.minutos ? duracao(t.minutos) : null,
+    t.minutos ? (t.minutos_real ? `previsto ${duracao(t.minutos)}` : duracao(t.minutos)) : null,
+    t.minutos_real ? `levou ${duracao(t.minutos_real)}` : null,
   ].filter(Boolean)
   return (
     <div className={`linha-tarefa ${t.feita ? 'feita' : ''}`}>
@@ -28,6 +30,7 @@ export default function LinhaTarefa({ tarefa: t, aoEditar, mostrarDia = false, m
           {detalhes.length > 0 && <span className="suave">{detalhes.join(' · ')}</span>}
         </span>
       </label>
+      <Anexos tarefaId={t.id} />
       <Bandeira nivel={t.prioridade} />
       {aoEditar && (
         <button type="button" className="btn-icone" onClick={() => aoEditar(t)} aria-label={`Editar ${t.titulo}`}>

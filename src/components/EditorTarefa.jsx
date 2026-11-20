@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
 import { fmtHora } from '../lib/util.js'
 import { Botao, Field, Icone, Modal, Segmentos } from './ui.jsx'
+import Anexos from './Anexos.jsx'
 
 const PRIORIDADES = [
   { v: 0, label: 'Nenhuma' }, { v: 1, label: 'Baixa' }, { v: 2, label: 'Média' }, { v: 3, label: 'Alta' },
@@ -28,6 +29,7 @@ export default function EditorTarefa({ tarefa, padrao = {}, aoFechar }) {
       dia: t.dia || null,
       inicio: t.dia && t.inicio ? t.inicio : null,
       minutos: Number(t.minutos) > 0 ? Math.min(720, Math.round(Number(t.minutos))) : null,
+      minutos_real: Number(t.minutos_real) > 0 ? Math.min(720, Math.round(Number(t.minutos_real))) : null,
       prioridade: t.prioridade,
       observacao: t.observacao?.trim() || null,
     }
@@ -79,10 +81,16 @@ export default function EditorTarefa({ tarefa, padrao = {}, aoFechar }) {
           <Field label="Começa às" hint={!t.dia ? 'Escolha o dia antes' : null}>
             <input type="time" value={t.inicio} disabled={!t.dia} onChange={(e) => muda({ inicio: e.target.value })} />
           </Field>
-          <Field label="Tempo (minutos)">
+          <Field label="Tempo previsto (minutos)">
             <input type="number" inputMode="numeric" min={1} max={720} value={t.minutos ?? ''} onChange={(e) => muda({ minutos: e.target.value })} />
           </Field>
         </div>
+        {tarefa && (
+          <Field label="Tempo que levou de verdade (minutos)" hint="Preencha quando terminar. Ajuda o Claude a planejar melhor as próximas.">
+            <input type="number" inputMode="numeric" min={1} max={720} value={t.minutos_real ?? ''} onChange={(e) => muda({ minutos_real: e.target.value })} />
+          </Field>
+        )}
+        {tarefa && <div className="campo"><Anexos tarefaId={tarefa.id} /></div>}
         <div className="campo">
           <span className="campo-rotulo">Prioridade</span>
           <Segmentos label="Prioridade" value={t.prioridade} onChange={(v) => muda({ prioridade: v })} options={PRIORIDADES} />
