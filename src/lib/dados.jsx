@@ -4,11 +4,11 @@ import { addDias, hoje, isoDia, msgErro } from './util.js'
 
 // Todos os dados da Ione ficam carregados na memória (é um app de uma pessoa só)
 const TABELAS = ['areas', 'projetos', 'tarefas', 'blocos_fixos', 'blocos_feitos', 'folgas',
-  'habitos', 'habito_marcas', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco', 'anexos', 'metas', 'categorias', 'lancamentos']
+  'habitos', 'habito_marcas', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco', 'anexos', 'metas', 'categorias', 'lancamentos', 'conexoes', 'contas', 'regras_categoria', 'investimentos', 'investimento_historico']
 // Tabelas com muitas linhas: só o último ano
-const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', sessoes_foco: 'inicio', lancamentos: 'dia' }
+const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', sessoes_foco: 'inicio', lancamentos: 'dia', investimento_historico: 'dia' }
 // Tabelas sem coluna id: a linha é identificada por estas colunas
-const CHAVES = { blocos_feitos: ['bloco_id', 'dia'], habito_marcas: ['habito_id', 'dia'] }
+const CHAVES = { blocos_feitos: ['bloco_id', 'dia'], habito_marcas: ['habito_id', 'dia'], investimento_historico: ['investimento_id', 'dia'] }
 
 const Ctx = createContext(null)
 const vazio = Object.fromEntries(TABELAS.map((t) => [t, []]))

@@ -1,21 +1,90 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
+import { supabase } from '../lib/supabase.js'
+import Classificar from '../components/dinheiro/Classificar.jsx'
+import Investimentos from '../components/dinheiro/Investimentos.jsx'
+import Conexoes from '../components/dinheiro/Conexoes.jsx'
 import { dataCurta, deIso, hoje, isoDia, lerValor, MESES, pad, reais } from '../lib/util.js'
-import { Botao, Field, Icone, Modal, Segmentos, Vazio } from '../components/ui.jsx'
+import { Botao, Field, Icone, Modal, Segmentos, Vazio, useToast } from '../components/ui.jsx'
 import { Cabecalho } from './Shell.jsx'
 
 const chaveMes = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
 
+// Atualiza Nubank e BTG pelo Open Finance (a chave da Pluggy fica só no Supabase)
+function useSincronia() {
+  const { d, carregar } = useDados()
+  const toast = useToast()
+  const [rodando, setRodando] = useState(false)
+  const automatico = useRef(false)
+  async function sincronizar(silencioso = false) {
+    setRodando(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('pluggy-sync', { method: 'POST' })
+      let corpo = data
+      if (error) {
+        try { corpo = await error.context?.json?.() } catch { corpo = null }
+        throw new Error(corpo?.erro || 'Não deu para atualizar agora.')
+      }
+      await carregar()
+      if (!silencioso || corpo?.novos) toast(corpo?.erros?.length ? `Atualizado com avisos: ${corpo.erros.join(' · ')}` : `Atualizado: ${corpo?.novos || 0} lançamentos novos`, corpo?.erros?.length ? 'erro' : 'ok')
+    } catch (e) {
+      if (!silencioso) toast(e.message, 'erro')
+    }
+    setRodando(false)
+  }
+  // ao abrir a tela, atualiza sozinho se a última vez foi há mais de 6 horas
+  useEffect(() => {
+    if (automatico.current || !d.conexoes.length) return
+    automatico.current = true
+    const ultima = d.conexoes.map((c) => c.ultima_sincronia).filter(Boolean).sort()[0]
+    if (!ultima || Date.now() - new Date(ultima).getTime() > 6 * 3600000) sincronizar(true)
+  }, [d.conexoes.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  return { rodando, sincronizar }
+}
+
 export default function Dinheiro() {
   const { d } = useDados()
+  const [aba, setAba] = useState('mes')
   const [mes, setMes] = useState(() => new Date(hoje().getFullYear(), hoje().getMonth(), 1))
   const [editando, setEditando] = useState(null) // lançamento, ou { tipo } para novo
+  const [classificando, setClassificando] = useState(null)
+  const { rodando, sincronizar } = useSincronia()
   const k = chaveMes(mes)
   const doMes = d.lancamentos.filter((l) => l.dia.startsWith(k)).sort((a, b) => b.dia.localeCompare(a.dia) || String(b.criado_em).localeCompare(String(a.criado_em)))
-  const entradas = doMes.filter((l) => l.tipo === 'entrada').reduce((s, l) => s + Number(l.valor), 0)
-  const gastos = doMes.filter((l) => l.tipo === 'gasto').reduce((s, l) => s + Number(l.valor), 0)
+  const contam = doMes.filter((l) => l.tipo !== 'transferencia')
+  const entradas = contam.filter((l) => l.tipo === 'entrada').reduce((s, l) => s + Number(l.valor), 0)
+  const gastos = contam.filter((l) => l.tipo === 'gasto').reduce((s, l) => s + Number(l.valor), 0)
   const saldo = entradas - gastos
   const titulo = `${MESES[mes.getMonth()][0].toUpperCase()}${MESES[mes.getMonth()].slice(1)} de ${mes.getFullYear()}`
+  const semCategoria = d.lancamentos.filter((l) => l.tipo !== 'transferencia' && !l.categoria_id && l.origem !== 'manual').sort((a, b) => b.dia.localeCompare(a.dia))
+  const ultima = d.conexoes.map((c) => c.ultima_sincronia).filter(Boolean).sort().pop()
+
+  const cabecalho = (
+    <>
+      <Cabecalho titulo="Dinheiro" sub="Gastos, entradas e investimentos">
+        <button type="button" className="btn btn-sec" onClick={() => setEditando({ tipo: 'entrada' })}><Icone nome="mais" tamanho={20} />Entrada</button>
+        <button type="button" className="btn btn-primario" onClick={() => setEditando({ tipo: 'gasto' })}><Icone nome="mais" tamanho={20} />Gasto</button>
+      </Cabecalho>
+      <div className="barra-sincronia">
+        <Segmentos label="Parte do Dinheiro" value={aba} onChange={setAba}
+          options={[{ v: 'mes', label: 'Mês' }, { v: 'investimentos', label: 'Investimentos' }, { v: 'contas', label: 'Contas e regras' }]} />
+        {d.conexoes.length > 0 && (
+          <span className="sincronia">
+            <span className="suave">{d.conexoes.map((c) => c.banco).join(' e ')} · {ultima ? `atualizado ${new Date(ultima).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}` : 'ainda não atualizado'}</span>
+            <Botao className="btn btn-sec btn-peq" carregando={rodando} onClick={() => sincronizar(false)}>Atualizar agora</Botao>
+          </span>
+        )}
+      </div>
+    </>
+  )
+  const modais = (
+    <>
+      {editando && <EditorLancamento lanc={editando.id ? editando : null} tipoInicial={editando.tipo} aoFechar={() => setEditando(null)} />}
+      {classificando && <Classificar lista={classificando} aoFechar={() => setClassificando(null)} />}
+    </>
+  )
+  if (aba === 'investimentos') return <div className="tela">{cabecalho}<Investimentos />{modais}</div>
+  if (aba === 'contas') return <div className="tela">{cabecalho}<Conexoes />{modais}</div>
 
   // gastos por categoria
   const porCat = new Map()
@@ -39,10 +108,16 @@ export default function Dinheiro() {
 
   return (
     <div className="tela">
-      <Cabecalho titulo="Dinheiro" sub="Gastos pessoais e da casa, e entradas">
-        <button type="button" className="btn btn-sec" onClick={() => setEditando({ tipo: 'entrada' })}><Icone nome="mais" tamanho={20} />Entrada</button>
-        <button type="button" className="btn btn-primario" onClick={() => setEditando({ tipo: 'gasto' })}><Icone nome="mais" tamanho={20} />Gasto</button>
-      </Cabecalho>
+      {cabecalho}
+      {d.conexoes.length === 0 && (
+        <div className="info">Para os gastos do Nubank e do BTG entrarem sozinhos, ligue o Open Finance na aba <strong>Contas e regras</strong>.</div>
+      )}
+      {semCategoria.length > 0 && (
+        <div className="aviso-classificar">
+          <span><strong>{semCategoria.length}</strong> {semCategoria.length === 1 ? 'lançamento do banco está' : 'lançamentos do banco estão'} sem categoria.</span>
+          <button type="button" className="btn btn-primario btn-peq" onClick={() => setClassificando(semCategoria)}>Classificar</button>
+        </div>
+      )}
       <div className="navegar">
         <button type="button" className="btn-icone" onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1))} aria-label="Mês anterior"><Icone nome="voltar" /></button>
         <strong>{titulo}</strong>
@@ -64,11 +139,14 @@ export default function Dinheiro() {
               <h3>{dataCurta(deIso(g.dia))}</h3>
               {g.itens.map((l) => {
                 const c = d.categorias.find((x) => x.id === l.categoria_id)
+                const conta = l.conta_id ? d.contas.find((x) => x.id === l.conta_id) : null
+                const transf = l.tipo === 'transferencia'
+                const detalhe = [transf ? 'não conta (transferência)' : c?.nome || (l.origem !== 'manual' ? 'sem categoria' : null), conta ? conta.nome : null, l.parcela ? `parcela ${l.parcela}` : null].filter(Boolean).join(' · ')
                 return (
-                  <button key={l.id} type="button" className="lancamento" onClick={() => setEditando(l)}>
-                    <i style={{ background: c?.cor || '#8A96A3' }} aria-hidden="true" />
-                    <span className="lancamento-textos"><strong>{l.descricao || c?.nome || (l.tipo === 'gasto' ? 'Gasto' : 'Entrada')}</strong>{l.descricao && c && <span className="suave">{c.nome}</span>}</span>
-                    <span className={l.tipo === 'entrada' ? 'valor-entrada' : ''}>{l.tipo === 'entrada' ? '+' : '−'} {reais(l.valor)}</span>
+                  <button key={l.id} type="button" className={`lancamento ${transf ? 'transferencia' : ''}`} onClick={() => setEditando(l)}>
+                    <i style={{ background: transf ? 'var(--borda-forte)' : c?.cor || '#8A96A3' }} aria-hidden="true" />
+                    <span className="lancamento-textos"><strong>{l.descricao || c?.nome || (l.tipo === 'gasto' ? 'Gasto' : 'Entrada')}</strong>{detalhe && <span className="suave">{detalhe}</span>}</span>
+                    <span className={l.tipo === 'entrada' ? 'valor-entrada' : ''}>{transf ? '' : l.tipo === 'entrada' ? '+ ' : '− '}{reais(l.valor)}</span>
                   </button>
                 )
               })}
@@ -89,7 +167,7 @@ export default function Dinheiro() {
           </ul>
         </section>
       </div>
-      {editando && <EditorLancamento lanc={editando.id ? editando : null} tipoInicial={editando.tipo} aoFechar={() => setEditando(null)} />}
+      {modais}
     </div>
   )
 }
@@ -112,7 +190,7 @@ function EditorLancamento({ lanc, tipoInicial, aoFechar }) {
     setSalvando(true)
     const ok = await salvar('lancamentos', {
       ...(lanc ? { id: lanc.id } : {}), tipo: l.tipo, valor, dia: l.dia,
-      categoria_id: l.categoria_id || null, descricao: l.descricao?.trim() || null,
+      categoria_id: l.tipo === 'transferencia' ? null : l.categoria_id || null, descricao: l.descricao?.trim() || null,
     })
     setSalvando(false)
     if (ok) aoFechar()
@@ -125,7 +203,7 @@ function EditorLancamento({ lanc, tipoInicial, aoFechar }) {
   }
 
   return (
-    <Modal titulo={lanc ? 'Editar lançamento' : l.tipo === 'gasto' ? 'Novo gasto' : 'Nova entrada'} aoFechar={aoFechar}
+    <Modal titulo={lanc ? 'Editar lançamento' : l.tipo === 'entrada' ? 'Nova entrada' : 'Novo gasto'} aoFechar={aoFechar}
       rodape={<>
         {lanc && <button type="button" className="btn btn-perigo" onClick={excluir}><Icone nome="lixo" tamanho={18} />Apagar</button>}
         <div className="espaco" />
@@ -133,12 +211,14 @@ function EditorLancamento({ lanc, tipoInicial, aoFechar }) {
         <Botao type="submit" form="form-lanc" carregando={salvando}>Salvar</Botao>
       </>}>
       <form id="form-lanc" className="form" onSubmit={enviar}>
-        <Segmentos label="Tipo" value={l.tipo} onChange={(v) => muda({ tipo: v, categoria_id: null })} options={[{ v: 'gasto', label: 'Gasto' }, { v: 'entrada', label: 'Entrada' }]} />
+        <Segmentos label="Tipo" value={l.tipo} onChange={(v) => muda({ tipo: v, categoria_id: null })} options={[{ v: 'gasto', label: 'Gasto' }, { v: 'entrada', label: 'Entrada' }, { v: 'transferencia', label: 'Não conta' }]} />
+        {l.tipo === 'transferencia' && <p className="suave">Transferência entre contas suas, pagamento de fatura ou aplicação: aparece na lista, mas não soma nos gastos nem nas entradas.</p>}
+        {lanc?.texto_banco && <p className="suave">Texto do banco: {lanc.texto_banco}</p>}
         <div className="grade-2">
           <Field label="Valor (R$)"><input type="text" inputMode="decimal" value={l.valor} autoFocus placeholder="0,00" onChange={(e) => muda({ valor: e.target.value })} /></Field>
           <Field label="Dia"><input type="date" value={l.dia} onChange={(e) => muda({ dia: e.target.value })} /></Field>
         </div>
-        <div className="campo">
+        {l.tipo !== 'transferencia' && <div className="campo">
           <span className="campo-rotulo">Categoria</span>
           <div className="chips">
             {categorias.map((c) => (
@@ -147,7 +227,7 @@ function EditorLancamento({ lanc, tipoInicial, aoFechar }) {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
         <Field label="Descrição (opcional)"><input type="text" maxLength={200} value={l.descricao || ''} placeholder="Ex.: mercado, gasolina" onChange={(e) => muda({ descricao: e.target.value })} /></Field>
         {erro && <p className="erro">{erro}</p>}
       </form>

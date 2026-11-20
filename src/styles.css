@@ -596,3 +596,26 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .lofi-escolha { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 16px; }
 .player-lofi { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
 .player-lofi iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; background: #000; }
+
+/* ---------- Dinheiro: Open Finance ---------- */
+.barra-sincronia { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.sincronia { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.aviso-classificar { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #FDF3D8; color: #5C3D00; border-radius: 14px; padding: 10px 14px 10px 16px; }
+[data-tema='escuro'] .aviso-classificar { background: #2E2510; color: var(--amarelo); }
+.lancamento.transferencia { opacity: 0.6; }
+.lanc-detalhe { display: flex; flex-direction: column; gap: 2px; background: var(--superficie-2); border-radius: 12px; padding: 10px 14px; }
+.conexao { display: flex; align-items: center; gap: 10px; min-height: 56px; border-top: 1px solid var(--linha); padding: 6px 0; }
+.cab-cartao + .conexao { border-top: 0; }
+.conexao-textos { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.nova-conexao { border-top: 1px solid var(--linha); padding-top: 12px; margin-top: 4px; }
+.nova-regra { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin: 6px 0; }
+@media (max-width: 599px) { .nova-regra { grid-template-columns: 1fr; } }
+.regras { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; }
+.regras li { display: flex; align-items: center; gap: 10px; min-height: 40px; border-top: 1px solid var(--linha); font-size: 14px; }
+.regras li span { flex: 1; color: var(--suave); }
+.regras code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; background: var(--superficie-2); border-radius: 6px; padding: 2px 8px; font-weight: 700; }
+.investimento { display: flex; align-items: center; gap: 12px; min-height: 56px; border-top: 1px solid var(--linha); padding: 6px 0; }
+.cab-cartao + .investimento { border-top: 0; }
+.investimento-textos { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.investimento-valores { display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; font-weight: 700; }
+.evolucao { width: 100%; height: 200px; touch-action: none; }
