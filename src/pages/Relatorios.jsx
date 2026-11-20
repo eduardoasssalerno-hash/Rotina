@@ -5,6 +5,7 @@ import { addDias, DIAS, DIAS_CURTOS, dataCurta, duracao, hoje, inicioSemana, iso
 import { Segmentos, Vazio } from '../components/ui.jsx'
 import { Cabecalho } from './Shell.jsx'
 import Feedback from '../components/Feedback.jsx'
+import Anexos from '../components/Anexos.jsx'
 
 // Data local (AAAA-MM-DD) de um horário salvo no banco
 const diaLocal = (ts) => (ts ? isoDia(new Date(ts)) : null)
@@ -280,6 +281,7 @@ function Notas() {
               <span className="tempo-titulo">{t.titulo}</span>
               <span className="suave">{t.feedback_em ? dataCurta(new Date(t.feedback_em)) : ''}</span>
               <span className="tag-nota"><Feedback tarefa={t} /></span>
+              <span className="nota-pdf"><Anexos tarefaId={t.id} tipo="correcao" /></span>
             </li>
           ))}
         </ul>
