@@ -6,6 +6,32 @@ import { Cabecalho } from './Shell.jsx'
 
 const CHAVE = '3s-rotina-foco'
 const DURACOES = [25, 50, 90]
+const CHAVE_LOFI = '3s-rotina-lofi'
+// Rádio lofi 24 horas (Lofi Girl) no YouTube; dá para trocar por outro link
+const LOFI_PADRAO = 'https://www.youtube.com/watch?v=jfKfPfyJRdk'
+
+function lerLofi() {
+  try { return { ligado: true, link: LOFI_PADRAO, ...JSON.parse(localStorage.getItem(CHAVE_LOFI) || '{}') } } catch { return { ligado: true, link: LOFI_PADRAO } }
+}
+function gravarLofi(l) {
+  try { localStorage.setItem(CHAVE_LOFI, JSON.stringify(l)) } catch { /* sem armazenamento */ }
+}
+// Transforma um link do YouTube (vídeo, live ou playlist) no endereço do player
+export function enderecoPlayer(link) {
+  try {
+    const u = new URL(String(link).trim())
+    if (!/(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(u.hostname)) return null
+    const lista = u.searchParams.get('list')
+    let id = u.searchParams.get('v')
+    if (!id && u.hostname.endsWith('youtu.be')) id = u.pathname.slice(1)
+    if (!id) id = (u.pathname.match(/\/(?:live|embed|shorts)\/([\w-]{6,})/) || [])[1]
+    const base = 'https://www.youtube-nocookie.com/embed/'
+    const extras = 'autoplay=1&enablejsapi=1&playsinline=1&rel=0'
+    if (id && /^[\w-]{6,20}$/.test(id)) return `${base}${id}?${extras}${lista ? `&list=${encodeURIComponent(lista)}` : ''}`
+    if (lista) return `${base}videoseries?list=${encodeURIComponent(lista)}&${extras}`
+  } catch { /* link inválido */ }
+  return null
+}
 
 // O cronômetro fica guardado neste aparelho: sair da tela não perde a contagem
 function lerFoco() {
@@ -44,6 +70,11 @@ export default function Foco() {
   const [foco, setFoco] = useState(lerFoco)
   const [, setTique] = useState(0)
   const [minutos, setMinutos] = useState(foco?.duracao || 25)
+  const [outro, setOutro] = useState(() => (foco?.duracao && !DURACOES.includes(foco.duracao) ? String(foco.duracao) : ''))
+  const [lofi, setLofiEstado] = useState(lerLofi)
+  const [trocando, setTrocando] = useState(false)
+  const player = useRef(null)
+  const setLofi = (l) => { setLofiEstado(l); gravarLofi(l) }
   const [tarefaId, setTarefaId] = useState(() => new URLSearchParams(window.location.search).get('tarefa') || foco?.tarefa_id || '')
   const salvando = useRef(false)
   const trava = useRef(null)
@@ -56,7 +87,7 @@ export default function Foco() {
   const tarefa = d.tarefas.find((t) => t.id === (foco?.tarefa_id ?? tarefaId))
   const projeto = tarefa?.projeto_id ? d.projetos.find((p) => p.id === tarefa.projeto_id) : null
 
-  const total = (foco?.duracao || minutos) * 60
+  const total = (foco?.duracao || (outro ? Math.max(1, Math.min(240, Math.round(Number(outro) || 0))) || 1 : minutos)) * 60
   const seg = decorrido(foco)
   const resta = Math.max(0, total - seg)
   const rodando = foco && !foco.pausadoEm
@@ -98,12 +129,18 @@ export default function Foco() {
     return () => { trava.current?.release?.().catch(() => {}); trava.current = null }
   }, [rodando])
 
+  const minutosEscolhidos = outro ? Math.max(1, Math.min(240, Math.round(Number(outro) || 0))) : minutos
   function comecar() {
-    const f = { inicio: Date.now(), pausas: 0, pausadoEm: null, duracao: minutos, tarefa_id: tarefaId || null }
+    if (!minutosEscolhidos) return
+    const f = { inicio: Date.now(), pausas: 0, pausadoEm: null, duracao: minutosEscolhidos, tarefa_id: tarefaId || null }
     gravarFoco(f)
     setFoco(f)
   }
+  function comandoPlayer(func) {
+    player.current?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*')
+  }
   function pausar() {
+    comandoPlayer(foco.pausadoEm ? 'playVideo' : 'pauseVideo')
     const f = foco.pausadoEm
       ? { ...foco, pausas: foco.pausas + (Date.now() - foco.pausadoEm), pausadoEm: null }
       : { ...foco, pausadoEm: Date.now() }
@@ -134,13 +171,20 @@ export default function Foco() {
             </svg>
             <div className="relogio-textos">
               <strong>{pad(Math.floor(resta / 60))}:{pad(resta % 60)}</strong>
-              <span className="suave">{foco ? (foco.pausadoEm ? 'pausado' : 'focando') : `${minutos} minutos`}</span>
+              <span className="suave">{foco ? (foco.pausadoEm ? 'pausado' : 'focando') : `${minutosEscolhidos || '—'} minutos`}</span>
             </div>
           </div>
 
           {!foco ? (
             <>
-              <Segmentos label="Duração" value={minutos} onChange={setMinutos} options={DURACOES.map((m) => ({ v: m, label: `${m} min` }))} />
+              <div className="duracoes">
+                <Segmentos label="Duração" value={outro ? null : minutos} onChange={(v) => { setMinutos(v); setOutro('') }} options={DURACOES.map((m) => ({ v: m, label: `${m} min` }))} />
+                <label className="outro-tempo">
+                  <span>ou</span>
+                  <input type="number" inputMode="numeric" min={1} max={240} value={outro} placeholder="outro" aria-label="Outro tempo, em minutos" onChange={(e) => setOutro(e.target.value.replace(/\D/g, '').slice(0, 3))} />
+                  <span>min</span>
+                </label>
+              </div>
               <label className="campo foco-tarefa">
                 <span className="campo-rotulo">No que você vai focar?</span>
                 <select value={tarefaId} onChange={(e) => setTarefaId(e.target.value)}>
@@ -151,11 +195,28 @@ export default function Foco() {
                   })}
                 </select>
               </label>
-              <Botao className="btn btn-primario btn-grande" onClick={comecar}><Icone nome="relogio" />Começar</Botao>
+              <div className="lofi-escolha">
+                <label className="check-simples"><input type="checkbox" checked={lofi.ligado} onChange={(e) => setLofi({ ...lofi, ligado: e.target.checked })} />Tocar lofi enquanto foco</label>
+                <button type="button" className="btn-texto" onClick={() => setTrocando(!trocando)}>{trocando ? 'Fechar' : 'Trocar música'}</button>
+              </div>
+              {trocando && (
+                <label className="campo foco-tarefa">
+                  <span className="campo-rotulo">Link do YouTube (vídeo, live ou playlist)</span>
+                  <input type="text" value={lofi.link} onChange={(e) => setLofi({ ...lofi, link: e.target.value })} />
+                  <span className="campo-dica">{enderecoPlayer(lofi.link) ? 'Link válido.' : 'Esse link não é do YouTube.'} <button type="button" className="btn-texto" onClick={() => setLofi({ ...lofi, link: LOFI_PADRAO })}>Voltar para a rádio lofi</button></span>
+                </label>
+              )}
+              <Botao className="btn btn-primario btn-grande" onClick={comecar} disabled={!minutosEscolhidos}><Icone nome="relogio" />Começar</Botao>
             </>
           ) : (
             <>
               <p className="foco-sobre">{tarefa ? <><strong>{tarefa.titulo}</strong>{projeto && <span className="suave"> · {projeto.nome}</span>}</> : 'Foco livre'}</p>
+              {lofi.ligado && enderecoPlayer(lofi.link) && (
+                <div className="player-lofi">
+                  <iframe ref={player} src={enderecoPlayer(lofi.link)} title="Música lofi" allow="autoplay; encrypted-media" referrerPolicy="strict-origin-when-cross-origin" />
+                  <span className="suave">Se a música não começar sozinha, toque no play.</span>
+                </div>
+              )}
               <div className="acoes">
                 <button type="button" className="btn btn-sec" onClick={pausar}>{foco.pausadoEm ? 'Continuar' : 'Pausar'}</button>
                 <Botao onClick={() => registrar(foco, decorrido(foco))}><Icone nome="check" tamanho={18} />Terminar e salvar</Botao>

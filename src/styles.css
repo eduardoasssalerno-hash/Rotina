@@ -585,3 +585,14 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .caixa-atencao strong { color: var(--laranja); }
 .texto-livre { white-space: pre-line; }
 .tag-nota { grid-row: 1 / span 2; grid-column: 2; }
+
+.feedback-notas { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.nota-pt { font-size: 24px; }
+.anexo-correcao { border-color: var(--acento); background: var(--acento-claro); }
+
+.duracoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+.outro-tempo { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--suave); }
+.outro-tempo input { width: 84px; min-height: 44px; text-align: center; }
+.lofi-escolha { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 16px; }
+.player-lofi { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.player-lofi iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; background: #000; }

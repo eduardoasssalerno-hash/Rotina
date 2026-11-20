@@ -28,20 +28,20 @@ export async function baixar(anexo) {
   setTimeout(() => URL.revokeObjectURL(url), 60000)
 }
 
-export function anexosDa(d, tarefaId) {
-  return d.anexos.filter((a) => a.tarefa_id === tarefaId).sort((a, b) => a.ordem - b.ordem)
+export function anexosDa(d, tarefaId, tipo = 'material') {
+  return d.anexos.filter((a) => a.tarefa_id === tarefaId && (a.tipo || 'material') === tipo).sort((a, b) => a.ordem - b.ordem)
 }
 
-// Botões dos arquivos de uma tarefa
-export default function Anexos({ tarefaId }) {
+// Botões dos arquivos de uma tarefa (material de estudo, ou o PDF da correção)
+export default function Anexos({ tarefaId, tipo = 'material' }) {
   const { d } = useDados()
   const [vendo, setVendo] = useState(null)
-  const lista = anexosDa(d, tarefaId)
+  const lista = anexosDa(d, tarefaId, tipo)
   if (!lista.length) return null
   return (
     <span className="anexos">
       {lista.map((a) => (
-        <button key={a.id} type="button" className="anexo" onClick={() => setVendo(a)}>
+        <button key={a.id} type="button" className={`anexo ${tipo === 'correcao' ? 'anexo-correcao' : ''}`} onClick={() => setVendo(a)}>
           <Icone nome="arquivo" tamanho={16} />{a.nome}
         </button>
       ))}

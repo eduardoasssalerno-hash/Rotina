@@ -268,9 +268,11 @@ function Notas() {
   const { d } = useDados()
   const lista = d.tarefas.filter((t) => t.feedback_nota != null).sort((a, b) => String(b.feedback_em).localeCompare(String(a.feedback_em)))
   const media = lista.length ? lista.reduce((s, t) => s + Number(t.feedback_nota), 0) / lista.length : 0
+  const comPt = lista.filter((t) => t.feedback_nota_pt != null)
+  const mediaPt = comPt.length ? comPt.reduce((s, t) => s + Number(t.feedback_nota_pt), 0) / comPt.length : null
   return (
     <section className="cartao">
-      <div className="cab-cartao"><h2>Notas das listas</h2>{lista.length > 0 && <span className="suave">média {media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</span>}</div>
+      <div className="cab-cartao"><h2>Notas das listas</h2>{lista.length > 0 && <span className="suave">média {media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}{mediaPt != null ? ` · português ${mediaPt.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}` : ''}</span>}</div>
       {lista.length === 0 ? <Vazio>Quando você terminar uma lista e me mandar as respostas, a nota e o feedback aparecem aqui e na própria tarefa.</Vazio> : (
         <ul className="tempo-real">
           {lista.map((t) => (
