@@ -1,0 +1,353 @@
+                               UNIVERSIDADE FEDERAL DE GOIÁS – UFG
+                         FACULDADE DE ADMINISTRAÇÃO, CIÊNCIAS CONTÁBEIS E
+                                   CIÊNCIAS ECONÔMICAS – FACE
+
+
+                      FAC0182 - MICROECONOMIA II - 2026/02
+
+
+                     LISTA 7 – Equilíbrio Geral/Trocas - Gabarito
+
+
+
+1. Partindo de uma economia de trocas com dois bens e dois consumidores A e B, descreva
+   em que ponto a Taxa Marginal de Substituição destes consumidores são iguais entre si.
+   Em termos geométricos, as TMS são iguais entre si no ponto em que as CIs são tangentes.
+   Individualmente, cada agente escolhe a melhor cesta que pode pagar, isso implica que a
+   TMgS entre dois bens é igual à razão dos preços (CIs de cada agente tangenciam sua reta
+   orçamentária).
+   Em um mercado competitivo, como todos os consumidores se defrontam com os mesmos
+   preços, todos deverão ter a mesma TMgS entre os dois bens. Paralelamente, como a reta
+   orçamentária de cada agente tem inclinação –p1/p2, isso significa que as CIs dos dois
+   indivíduos têm de ser tangentes uma à outra.
+   Geometricamente:
+
+
+
+
+2. Em que condições uma alocação ótima de Pareto é um equilíbrio de mercado?
+   Uma alocação ótima de Pareto é um equilíbrio de mercado, se as preferências individuais
+   são bem-comportadas, o que implica em curvas de indiferenças convexas. Preferências
+   convexas implicam que a tangente comum não interceptará nenhuma das duas curvas mais
+   de uma vez. Com isso, a alocação eficiente de Pareto (cada ponto na curva de contrato) é
+   um equilíbrio competitivo para alguma alocação inicial de recursos.
+3. É possível ter uma alocação eficiente no sentido de Pareto numa situação em que todos
+   estejam pior quando comparado a uma alocação que não seja eficientejh no sentido de
+   Pareto?
+   Não. Isso é um contrassenso pela própria definição de uma alocação eficiente. Ou seja, se
+   a alocação é eficiente, isso implica que a melhora na condição de um agente reflete,
+   obrigatoriamente, em piora na condição de outro agente. De outra forma, partindo de uma
+   alocação eficiente, não é possível melhorar a situação de todas as partes, alguém sempre
+   terá sua condição piorada.
+
+4. Se conhecermos a curva de contrato, conheceremos o resultado final de qualquer troca.
+   Verdadeiro ou falso?
+   Se conhecermos a curva de contrato, conheceremos todas as possíveis alocações
+   eficientes, mas nada podemos dizer sobre qual dentre estas será a escolha realizada/efetiva.
+
+5. Alguém pode melhorar se estiver numa alocação eficiente no sentido de Pareto?
+   Sim, mas isso implicará necessariamente na piora na condição de outra pessoa.
+
+6. Dizemos que o mercado está em equilíbrio desde que os consumidores demandem cestas
+   de consumo sobre suas linhas de restrição orçamentária, e que a soma dos valores dos
+   excessos de demanda agregada de todos os mercados de uma economia seja
+   identicamente igual a zero. Usando o diagrama de Edgeworth, demonstre esse equilíbrio
+   (Lei de Walras) para uma economia de trocas com dois consumidores e dois bens.
+
+
+
+
+O diagrama acima descreve um cenário inicial (pontos z e x) que não se configura um equilíbrio.
+Partindo da dotação inicial (ponto w), e considerando os preços dados (p1, p2) pelo mercado
+(sob a reta orçamentária), o grupo A deseja a cesta apresentada no ponto x, enquanto o grupo
+B deseja a cesta apresentada no ponto Z.
+Para os preços dados (p1, p2), nada garante que a oferta se iguale à demanda – em qualquer
+dos dois sentidos.
+Nesse caso, os agentes não conseguirão concluir as transações que desejam: os mercados
+não estarão em equilíbrio.
+Nessa situação de desequilíbrio, os preços dos bens irão se ajustar, seguindo um processo de
+ajustamento até que a demanda de cada um dos bens se iguale à oferta.
+No cenário apresentado no diagrama, considerando excesso de Oferta do bem 1 e o excesso
+de demanda do bem 2, o preço de 1 irá cair e 2 irá aumentar (a reta orçamentária será
+reposicionada), até que o desequilíbrio seja corrigido.
+
+Geometricamente o equilíbrio será representado por:
+Assim, conforme a Lei de Walras, Se todos fizerem transações em um mercado competitivo
+(leiloeiro), todas as transações mutuamente vantajosas serão realizadas e o resultante
+equilíbrio na alocação dos recursos será Pareto eficiente.
+     No equilíbrio, generalizando para n indivíduos :
+
+      𝐴        𝐵        𝐶            𝑛
+                                           𝑝1
+   𝑇𝑀𝑆1,2 = 𝑇𝑀𝑆1,2 = 𝑇𝑀𝑆1,2 = ⋯ = 𝑇𝑀𝑆1,2, =
+                                           𝑝2
+   Isso implicada que a soma dos valores dos excessos de demanda agregada de todos os
+   mercados de uma economia seja identicamente igual a zero. Generalizando para n
+   mercados
+
+                                      𝑝1 𝑞1 + 𝑝2 𝑞2 + ⋯ + 𝑝𝑛 𝑞𝑛 = 0
+
+
+7. Luíza possui 8 litros de refrigerante e 2 sanduíches. Carlos, por outro lado, possui 2 litros de
+   refrigerante e 4 sanduíches. Considerando tais posses, a taxa marginal de substituição
+   (TMgS) de Luíza, de refrigerante por sanduíches, é 3 e a TMgS de Carlos é igual a 1. Pede-
+   se:
+   a) Essa dotação é eficiente?
+   b) Desenhe um diagrama da caixa de Edgeworth para mostrar se essa alocação de
+       recursos é eficiente ou não.
+
+         Não. Alocações eficientes requerem que as TMgS de todos os consumidores sejam
+         iguais, o que não ocorre conforme enunciado da questão.
+
+         Disponibilidade de refrigerantes: 8+2=10 litros (largura da caixa)
+         Disponibilidade de sanduíches: 2+4=6 unidades (altura de caixa)
+
+                                              𝐿
+                                                    𝑈𝑀𝑔𝑅 3
+                                           𝑇𝑀𝑆𝑅,𝑆 =     =
+                                                    𝑈𝑀𝑔𝑆 1
+                                              𝐶
+                                                    𝑈𝑀𝑔𝑅 1
+                                           𝑇𝑀𝑆𝑅,𝑆 =     =
+                                                    𝑈𝑀𝑔𝑆 1
+   6                                                             OC
+
+
+
+
+    OL                                                         10
+8. Seja uma economia de troca com 8 consumidores e 2 bens, x e y. Considere que João (um
+   dos 8 consumidores) tenha uma função utilidade Coob-Douglas 𝑈 = 𝑥𝑦. Seja uma alocação
+   eficiente de Pareto (𝑥 ∗ , 𝑦 ∗ ) em que João consome 10 unidades do bem x e 5 unidades do
+   bem y. Quais os preços associados à esta alocação, equivalente ao equilíbrio competitivo?
+
+   No equilíbrio:
+
+      𝐽𝑜ã𝑜      2        3            8
+                                                𝑝𝑥
+   𝑇𝑀𝑆𝑥,𝑦  = 𝑇𝑀𝑆𝑥,𝑦 = 𝑇𝑀𝑆𝑥,𝑦 = ⋯ = 𝑇𝑀𝑆𝑥,𝑦 =
+                                                𝑝𝑦
+
+                                       𝐽𝑜ã𝑜    𝑈𝑀𝑔𝑥 𝑝𝑥
+                                    𝑇𝑀𝑆𝑥,𝑦  =        =
+                                               𝑈𝑀𝑔𝑦 𝑝𝑦
+                                            𝐽𝑜ã𝑜   𝑦
+                                         𝑇𝑀𝑆𝑥,𝑦  =
+                                                   𝑥
+
+                                          𝐽𝑜ã𝑜   𝑦 𝑝𝑥
+                                       𝑇𝑀𝑆𝑥,𝑦  =   =
+                                                 𝑥 𝑝𝑦
+                                            5   𝑝𝑥
+                                              =
+                                           10 𝑝𝑦
+
+                                           𝑝𝑦 = 2𝑝𝑥
+
+   Os preços associados serão aqueles em 𝑝𝑦 é igual ao dobro do preço de x
+
+
+9. Suponha dois consumidores, Maria e Pedro, cujas funções de Utilidade sejam dadas,
+   respectivamente, por:
+                                          𝑈 = 𝑥 + 2𝑦
+                                         𝑈 = min{𝑥, 2𝑦}
+    Maria detém inicialmente 12 unidades de y e 0 unidade de x, enquanto Pedro detém 12
+    unidades de x e 0 unidade de y (perceba que as alocações possíveis/factíveis de cada bem
+    totaliza 12 unidades). Considerando o equilíbrio competitivo, apresente:
+      a) Os preços associados à alocação do equilíbrio competitivo (𝑥 ∗ , 𝑦 ∗ ).
+      b) As funções de restrição orçamentária dos consumidores.
+      c) A cesta de consumo ótima dos consumidores. Dica, encontre primeiro a cesta de
+           Pedro.
+      d) Desenhe uma caixa de Edgeworth, apresentando as dotações inicial e final.
+
+   a) As preferências de Maria são por bens substitutos e Pedro são complementares.
+      Perceba que para Maria o equilíbrio de consumo dos bens é constante é igual a 0,5, ou
+      seja:
+                                         𝑀𝑎𝑟𝑖𝑎
+                                                 𝑈𝑀𝑔𝑥 1
+                                    𝑇𝑀𝑆𝑥,𝑦     =       =
+                                                 𝑈𝑀𝑔𝑦 2
+   Logo no equilíbrio competitivo:
+                                        𝑈𝑀𝑔𝑥 1 𝑝𝑥
+                                               = =
+                                        𝑈𝑀𝑔𝑦 2 𝑝𝑦
+   Ou
+                                            𝑝𝑦
+                                               =2
+                                            𝑝𝑥
+   Os preços associados serão aqueles em 𝑝𝑦 é igual ao dobro de 𝑝𝑥
+
+   b) A renda de cada consumidor corresponde ao valor de mercado de sua dotação inicial.
+      Logo, a cesta inicial de Maria é igual a:
+                                          𝑅 = 𝑝𝑥 ∗ 0 + 𝑝𝑦 ∗ 12
+                                          𝑅 = 12𝑝𝑦
+   Assim, considerando o valor da Renda de Maria a partir da cesta inicial (𝑅 = 12𝑝𝑦 ), temos
+   que a restrição orçamentária (RO) associada à cesta adquirida, será de:
+                                   𝑥 ∗ 𝑝𝑥 + 𝑝𝑦 ∗ 𝑦 = 12𝑝𝑦
+
+   Dividindo toda expressão acima por 𝑝𝑥 , temos:
+                                          𝑝𝑦      𝑝𝑦
+                                     𝑥 + ∗ 𝑦 = 12
+                                          𝑝𝑥      𝑝𝑥
+                             𝑝𝑦
+   No equilíbrio sabemos que 𝑝 = 2, logo:
+                                𝑥
+                                         𝑥 + 2𝑦 = 24
+
+   Para Pedro, a cesta em valores monetários é igual a:
+                                   𝑅 = 𝑝𝑥 ∗ 12 + 𝑝𝑦 ∗ 0
+
+   Assim considerando o valor da Renda de Pedro a partir da cesta inicial (𝑅 = 12𝑝𝑥 ), temos
+   que a restrição orçamentária (RO) associada à cesta, será de:
+                                   𝑥 ∗ 𝑝𝑥 + 𝑝𝑦 ∗ 𝑦 = 12𝑝𝑥
+
+   Dividindo toda expressão acima por 𝑝𝑥 , temos:
+                                            𝑝𝑦
+                                      𝑥 + ∗ 𝑦 = 12
+                                            𝑝𝑥
+                               𝑝𝑦
+   No equilíbrio sabemos que 𝑝 = 2 logo:
+                                𝑥
+                                         𝑥 + 2𝑦 = 12
+
+c) Pedro, que apresenta preferências por complementares, consumirá bens sempre na
+   proporção x=2y. Substituindo essa proporção na sua RO, a cesta ótima de consumo será
+   dada por:
+                                       2𝑦 + 2𝑦 = 12
+   𝑦 = 3, logo 𝑥 = 6
+   Cesta ótima de Pedro (6,3)
+
+   Considerando que as alocações factíveis (possíveis) se referem ao total disponível de
+   bens que é de (12,12), logo a cesta ótima de Maria (por diferença com a cesta ótima de
+   Pedro) é de (6,9).
+   10. Considere uma economia composta por dois consumidores, Maria e Pedro, e dois bens, x e
+       y. As preferências e dotações iniciais são dadas por:
+      Consumidor Função Utilidade Dotação Inicial (x,y)        Tipo de Preferência
+      Maria           U=x⋅y                (4, 2)            Cobb–Douglas
+      Pedro           U=min{x,y}           (2, 4)            Complementares perfeitos
+
+A dotação total disponível na economia é de 6 unidades de cada bem:
+
+                                              𝑥 = 6, 𝑦 = 6
+
+Sabendo que:
+
+   •   A demanda de um consumidor com utilidade Cobb–Douglas U=x⋅y é:
+
+                                                  1 𝑅         1 𝑅
+                                              𝑥 = 2𝑝 , 𝑦 = 2𝑝
+                                                     𝑥          𝑦
+
+
+   •   E a demanda para bens complementares perfeitos 𝑈 = 𝑚𝑖𝑛{𝑥, 𝑦} é:
+
+                                                       𝑅
+                                          𝑥=𝑦=
+                                                    𝑝𝑥 + 𝑝𝑦
+
+onde R é a renda do consumidor.
+
+Pede-se:
+
+a) Escreva as restrições orçamentárias de Maria e Pedro, considerando preços 𝑝𝑥 e 𝑝𝑦
+b) Determine as funções de demanda de cada consumidor.
+c) Encontre a razão de preços de equilíbrio competitivo (𝑝𝑦 /𝑝𝑥 ).
+d) Calcule a cesta de consumo ótima (x, y)** de cada consumidor.
+e) Represente graficamente a situação em uma Caixa de Edgeworth, indicando:
+
+   •   a dotação inicial (𝜔),
+   •   a linha orçamentária,
+   •   as curvas de indiferença,
+   •   e o ponto de equilíbrio competitivo.
+
+
+
+           a) Restrições Orçamentárias:
+
+              Maria
+   Pedro:
+
+
+
+
+b) Demandas individuais
+
+   Maria: Considerando U= x.y, sabemos que a demanda por bens Cobb Douglas é dada pela
+   função (ver quadro ao final do arquivo):
+
+                                          𝑅                𝑅
+                                    𝑥𝑀 = 2𝑝𝑀 e 𝑦𝑀 = 2𝑝𝑀
+                                              𝑥                𝑦
+
+   Logo:
+
+
+
+
+   Perceba que (curiosidade, que não impacta na resolução do exercício):
+
+
+
+
+   Pedro:
+
+   Considerando U=min{x,y}, logo a demanda de x = demanda de y, ou seja: x = y, que por sua
+   vez é dado por (ver quadro ao final do arquivo):
+
+
+
+
+c) Razão de preços no equilíbrio:
+           d) Cesta ótima considerando a razão de preços = 1 é obtida nas demandas individuais (questão
+               b). Maria = Pedro = (3,3)
+   •   Perceba que a razão de preços py/px=1 torna a reta orçamentária com inclinação −1. No ponto (3,3)
+       as CIs tocam a mesma linha orçamentária (tangência para Maria e “quina” eficiente para Pedro). Na
+       caixa, (6x6) é alocação competitiva e Pareto-eficiente na caixa.
+
+
+
+
+   11. Considere uma economia de troca pura com dois bens (x e y) e dois agentes A e B. As
+       preferências e dotações iniciais são dadas por:
+
+   •   Agente A: 𝑈𝐴 (𝑥𝐴 , 𝑦𝐴 ) = min{𝑥𝐴 , 𝑦𝐴 }, (𝑥𝐴 , 𝑦𝐴 ) = (10,0)
+   •   Agente B: 𝑈𝐵 (𝑥𝐵 , 𝑦𝐵 ) = 𝑥𝐵 + 𝑦𝐵 , (𝑥𝐵 , 𝑦𝐵 ) = (0,10).
+
+A dotação (disponibilidade) total de bens na economia é, portanto, (𝑋, 𝑌) = (10,10).
+Pede-se:
+
+           a. Represente graficamente a Caixa de Edgeworth, indicando claramente a dotação
+              inicial e as origens de cada agente.
+           b. Determine o conjunto de alocações eficientes de Pareto e destaque-o na Caixa.
+           c. Encontre o equilíbrio competitivo (Walrasiano), indicando:
+                    • a relação de preços de equilíbrio;
+                    • as cestas de consumo de equilíbrio de cada agente.
+
+
+
+
+     Vamos partir da condição de equilíbrio apresentada em sala:
+
+
+
+
+     Para bens substitutos perfeitos, como apresentado para o Agente B, sabemos que TMS = 1,
+     logo no equilíbrio Px = Py. Considerando a demanda por bens complementares, temos:
+                                                  𝑅𝐴     10𝑝𝑥
+                                      𝑥𝐴 = 𝑦𝐴 =        =
+                                                𝑝𝑥 + 𝑝𝑦 𝑝𝑥 + 𝑝𝑦
+
+
+     Logo
+                                            𝑥𝐴 = 𝑦𝐴 = 5
+
+     Por diferença, para o Agente A, a cesta também será de (5,5).
+
+
+     c) A relação de preços Px/Py=1. Essa relação é obtida pela análise do equilíbrio do agente
+     B, que detém função de Utilidade por bens substitutos perfeitos, e logo sabemos que TMS
+     = 1. Por consequência, no equilíbrio Px = Py.
+      No equilíbrio, como já calculado nas questões anteriores, a cesta de consumo é (5;5),
+     para cada agente.
+Abaixo as funções de Demanda direta para diferentes tipos de bens:
+

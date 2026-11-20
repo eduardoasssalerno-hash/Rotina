@@ -1,0 +1,106 @@
+                                UNIVERSIDADE FEDERAL DE GOIÁS – UFG
+                          FACULDADE DE ADMINISTRAÇÃO, CIÊNCIAS CONTÁBEIS E
+                                    CIÊNCIAS ECONÔMICAS – FACE
+
+
+                       FAC0182 - MICROECONOMIA II - 2026/02
+
+
+                              LISTA 5 - Teoria dos Jogos
+                      ➢ Para entrega: selecione 4 questões
+
+
+1. Descreva o conceito de interação estratégica e como este conceito se relaciona aos nossos
+   estudos em economia.
+   Interação estratégica pode ser definida quando os resultados das ações de um agente
+   refletem-se nos resultados de ações de outro(s) agente(s) e vice-versa. Portanto, as partes
+   devem levar em conta tais reflexos ao tomar suas próprias decisões. Em nossos estudos
+   este conceito é aplicado na análise entre indivíduos e empresas.
+
+2. Apresente o conceito de jogos simultâneos e como eles podem ser representados. Descreva
+   um exemplo no qual esse jogo pode ser visualizado entre empresas.
+   Jogos simultâneos são definidos quando os jogadores desconhecem as escolhas de seus
+   oponentes. Logo cada jogador deve tomar suas decisões com base no que acredita/imagina
+   ser a escolha do oponente. Eles podem ser representados através de uma matriz que
+   apresenta as estratégias e os ganhos associados a cada estratégia, por parte de cada
+   jogador. Exemplo: em aberto, ou seja, sem gabarito.
+
+3. Descreva um jogo sequencial que tenha relação com decisões que empresas podem ter que
+   tomar, representando-o de forma estendida.
+   Não há um gabarito específico.
+
+4. Considere o jogo simultâneo representado pela matriz de ganhos (com os jogadores A e B),
+   e então avalie as afirmações abaixo, marcando V para verdadeiro e F para falso, e explique
+   sua resposta.
+
+
+
+
+   (𝐹) Jogar Direita é estratégia dominante para o Jogador B. Os ganhos associados a esta
+   estratégia (jogar direita) depende da estratégia adotada pelo jogador A. Logo não é uma
+   estratégia que conduz aos maiores ganhos independentes da estratégia do oponente
+   (conceito de estratégia dominante).
+   (𝑉) O jogo possui pelo menos um equilíbrio de Nash em estratégias puras. Possui dois
+   equilíbrios de Nash: (4,2) e (1,3)
+   (𝐹) Jogar Alto com probabilidade 2/3 e jogar Esquerda com probabilidade 1/3 é equilíbrio de
+   Nash em estratégias mistas, sendo o ganho médio igual para ambos os jogadores.
+   Apesar do resultado do jogo ser aleatório, ou seja, não sabemos ao certo qual será o
+   ganho dos jogadores, o ganho médio esperado do jogador A será de 0,67 e do jogador B
+   será de 1,00.
+
+5. Considere o jogo simultâneo representado pela matriz de ganhos (com os jogadores A e B),
+   e então avalie as afirmações abaixo, marcando V para verdadeiro e F para falso, e explique
+   sua resposta.
+
+
+
+
+   (𝑉) Este jogo pode ser considerado do tipo Dilema dos Prisioneiros. O equilíbrio de Nash
+   do jogo (nega, nega), que também é a estratégia estritamente dominante, não é um equilíbrio
+   eficiente no sentido de Pareto.
+   (𝑉) O prisioneiro 1 tem uma estratégia estritamente dominante. Negar
+   (𝑉) O jogo tem um equilíbrio em estratégias mistas em que os participantes jogam cada uma
+   de suas estratégias com 50% de probabilidade. Sim, poderia ser com qualquer
+   probabilidade. Como demonstrado por Nash (1951), todo jogo com um número finito de
+   jogadores e conjuntos finitos de estratégias tem pelo menos um equilíbrio de Nash de
+   estratégias mistas. Lembrando que o equilíbrio de Nash em estratégias mistas é um
+   equilíbrio no qual cada agente escolhe a frequência ótima para jogar as suas estratégias,
+   dadas as frequências das escolhas do outro agente.
+
+6. Duas empresas concorrentes estão planejando introduzir um novo produto no mercado.
+   Cada empresa deve decidir entre produzir o Produto A, o Produto B ou o Produto C. As
+   empresas devem tomar sua decisão simultaneamente. A matriz de ganhos resultante é
+   apresentada a seguir.
+
+
+
+
+a. Há algum equilíbrio em estratégia dominante? Se sim, apresente. Não
+b. Há algum equilíbrio de Nash em estratégias puras? Se houver, quais são eles? Há dois
+      equilíbrios de Nash em estratégias puras. (20,10); (10,20)
+c. E em estratégia mista? Há alguma estratégia? Se sim, apresente. Novamente, como
+      demonstrado por Nash, qualquer jogo com um número finito de jogadores e conjuntos
+      finitos de estratégias tem pelo menos um equilíbrio de Nash de estratégias mistas. O
+      equilíbrio final (e o ganho associado) irá depender da frequência (probabilidade)
+      escolhida por cada jogador para cada estratégia.
+   7. Duas firmas escolhem simultaneamente Publicidade (Pub) ou P&D (PD).
+                                            Pub PD
+                                       Pub (3,3) (5,1)
+                                       PD (1,5) (4,4)
+        a. Determine as melhores respostas de cada jogador.
+        b. Encontre o(s) equilíbrio(s) de Nash em estratégias puras.
+        c. Existe alguma estratégia estritamente dominante? Justifique.
+
+
+Gabarito:
+(a) Melhor resposta de ambos: Pub em todos os casos.
+(b) NE puro: (Pub, Pub).
+(c) Pub é estritamente dominante para ambos.
+
+
+   8. Atividade extra: Escolher um dos filmes abaixo e avaliar a(s) parte(s) associada(s) aos
+      conceitos relacionados à Teoria dos Jogos.
+      “ A chegada”, disponível na Netflix
+      “ Uma mente brilhante”, disponível vimeo
+      “Lances inocentes” disponível na Netflix
+

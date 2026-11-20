@@ -1,0 +1,142 @@
+                                 UNIVERSIDADE FEDERAL DE GOIÁS – UFG
+                           FACULDADE DE ADMINISTRAÇÃO, CIÊNCIAS CONTÁBEIS E
+                                     CIÊNCIAS ECONÔMICAS – FACE
+
+
+                        FAC0182 - MICROECONOMIA II - 2026/02
+
+
+                  LISTA 8 – Bem-Estar e Escolha Coletiva - Gabarito
+
+
+1. Três eleitores têm preferências:
+   Eleitor 1: X ≻ Y ≻ Z
+   Eleitor 2: Y ≻ Z ≻ X
+   Eleitor 3: Y ≻ X ≻ Z
+   (a) Há vencedor de Condorcet?
+   Sim. Fazendo as votações par a par: X × Y → Y vence (eleitores 2 e 3); Y × Z → Y vence
+   (eleitores 1, 2 e 3); X × Z → X vence (eleitores 1 e 3). A ordenação social é Y ≻ X ≻ Z, que
+   é transitiva. Y derrota todas as outras alternativas e, portanto, é o vencedor de Condorcet.
+
+   (b) As preferências são unimodais na ordem X < Y < Z?
+   Sim. Lendo a posição de cada alternativa na ordem X < Y < Z:
+   Eleitor 1 (1º, 2º, 3º) só piora, com pico em X;
+   Eleitor 2 (3º, 1º, 2º) melhora até Y e depois piora, com pico em Y;
+   Eleitor 3 (2º, 1º, 3º) melhora até Y e depois piora, com pico em Y.
+
+   Logo todos têm um único pico. Os picos são X, Y e Y; o pico mediano é Y, o que é coerente
+   com o item (a): pelo teorema do eleitor mediano, Y vence por maioria.
+
+2. Cinco moradores preferem gastar 4, 6, 8, 12 e 20 (R$ mil) com uma praça, com preferências
+   unimodais.
+   (a) Qual gasto vence por maioria?
+   R$ 8 mil, que é o pico do eleitor mediano (3º morador). Contra qualquer valor maior que 8,
+   os moradores com picos 4, 6 e 8 preferem 8; contra qualquer valor menor, os moradores
+   com picos 8, 12 e 20 preferem 8. Em ambos os casos, 8 vence por 3 a 2.
+
+   (b) Compare com a média.
+   A média é (4 + 6 + 8 + 12 + 20)/5 = 50/5 = 10, maior que a mediana (8). A votação por maioria
+   leva a um gasto menor que a média das preferências, porque o morador com pico em 20
+   puxa a média para cima, mas não altera o eleitor mediano.
+
+   (c) O resultado muda se o 5º morador passar a preferir 40?
+   Não. A mediana continua 8; apenas a média sobe para (4 + 6 + 8 + 12 + 40)/5 = 70/5 = 14.
+   A votação por maioria considera apenas a ordem das preferências, não sua intensidade:
+   preferências extremas não alteram o resultado.
+
+3. Avalie as afirmações abaixo em Verdadeiro (V) ou Falso (F) e justifique:
+   (a) Se todos têm preferências transitivas, a regra da maioria gera uma ordenação social
+   transitiva.
+   Falso. O Paradoxo de Condorcet mostra o contrário: com 1: A ≻ B ≻ C, 2: B ≻ C ≻ A e 3: C
+   ≻ A ≻ B, cada eleitor é transitivo, mas a maioria gera o ciclo A ≻ B, B ≻ C e C ≻ A. A maioria
+   simples viola a condição de racionalidade (transitividade) de Arrow.
+   (b) Com preferências unimodais, a maioria escolhe a alternativa do eleitor mediano.
+   Verdadeiro, desde que a escolha ocorra em uma única dimensão e o número de eleitores
+   seja ímpar (Teorema do Eleitor Mediano, Black, 1948). A alternativa preferida pelo eleitor
+   mediano vence qualquer outra em votação por maioria, pois ele sempre faz parte do grupo
+   vencedor.
+   (c) Segundo o Teorema da Impossibilidade de Arrow, a ditadura é a única regra de escolha
+   social que satisfaz as cinco condições propostas por Arrow.
+   Falso. Nenhuma regra satisfaz as cinco condições simultaneamente. A ditadura satisfaz
+   racionalidade, domínio irrestrito, Pareto e IIA, mas viola justamente a quinta condição, a de
+   não ditadura. A formulação correta é: toda regra que satisfaz as quatro primeiras condições
+   é ditatorial.
+
+4. Três vereadores precisam decidir o destino de uma verba entre Saúde (S), Educação (E) e
+   Transporte (T). As preferências são:
+                       Vereador         1º         2º         3º
+                           1            S           E         T
+                           2            E           T         S
+                           3            T           S         E
+   (a) Faça as votações par a par por maioria. Existe vencedor de Condorcet?
+   S × E → S vence (vereadores 1 e 3);
+   E × T → E vence (vereadores 1 e 2);
+   T × S → T vence (vereadores 2 e 3).
+   O resultado é S ≻ E, E ≻ T e T ≻ S: um ciclo. Não existe vencedor de Condorcet (Paradoxo
+   de Condorcet).
+
+   (b) Suponha que as votações sejam feitas em duas rodadas: as duas primeiras alternativas
+   se enfrentam e a vencedora disputa com a terceira. Qual alternativa vence se a primeira
+   rodada for:
+   a) E × T?
+   Primeira rodada E × T: E vence; depois E × S: S vence. Resultado: Saúde.
+
+   b) E se for S × E?
+   Primeira rodada S × E: S vence; depois S × T: T vence. Resultado: Transporte.
+
+   (c) Se o vereador 3 presidir a sessão e puder definir a pauta, qual ordem de votação ele
+   escolherá? O que isso revela?
+   Como o vereador 3 prefere Transporte, ele colocará S × E na primeira rodada, para que T
+   enfrente S na final e vença.
+   Com preferências cíclicas, quem controla a agenda controla o resultado: qualquer alternativa
+   pode vencer, dependendo da ordem das votações.
+
+   (d) Qual condição de Arrow a regra da maioria viola nesse exemplo?
+   A condição de racionalidade: a ordenação social não é transitiva, embora cada vereador
+   tenha preferências transitivas.
+
+5. Cinco alunos ordenam três datas possíveis para uma prova: Segunda, Quarta e Sexta. As
+   preferências são:
+             Grupo        Nº de          1º           2º           3º
+                         alunos
+                 I          3        Segunda        Quarta       Sexta
+                II          2          Quarta       Sexta      Segunda
+   (a) Determine o vencedor de Condorcet por maioria em votações par a par.
+   Segunda × Quarta: Segunda vence por 3 a 2 (grupo I).
+   Segunda × Sexta: Segunda vence por 3 a 2 (grupo I).
+   Quarta × Sexta: Quarta vence por 5 a 0.
+
+   Segunda é o vencedor de Condorcet.
+
+6. Sobre o Teorema da Impossibilidade de Arrow. O teorema prova que a democracia é
+   impossível? Comente.
+   Não. O teorema mostra que nenhuma regra de agregação satisfaz simultaneamente as cinco
+   condições/regras; toda regra democrática tem algum defeito. Escolher uma regra é escolher
+   qual condição a sociedade está disposta a relaxar: admitir comparações interpessoais de
+   utilidade, restringir o domínio (por exemplo, preferências unimodais) ou abrir mão da IIA.
+
+7. Uma câmara com sete vereadores decide, por maioria, o orçamento anual para cultura. Os
+   valores preferidos por cada vereador (em R$ milhões) são 2, 3, 5, 6, 8, 12 e 20, e as
+   preferências são unimodais.
+   (a) Qual orçamento será aprovado? Mostre que ele vence as propostas de 5 e de 8.
+   Será aprovado R$ 6 milhões, o pico do eleitor mediano (4º vereador).
+   Contra 5: os vereadores com picos 6, 8, 12 e 20 preferem 6, que vence por 4 a 3.
+   Contra 8: os vereadores com picos 2, 3, 5 e 6 preferem 6, que vence por 4 a 3.
+
+   (b) Calcule a média dos valores preferidos e compare com o resultado da votação.
+   Média = (2 + 3 + 5 + 6 + 8 + 12 + 20)/7 = 56/7 = 8. O orçamento aprovado (6) é menor que
+   a média (8).
+
+   (c) Se o vereador que prefere 20 passar a preferir 48, o que acontece com o resultado da
+   votação e com a média?
+   O resultado da votação continua sendo 6, pois o eleitor mediano não muda. A média sobe
+   para (56 − 20 + 48)/7 = 84/7 = 12.
+
+   (d) Com base nos itens anteriores, o resultado da votação por maioria é necessariamente
+   eficiente? Explique.
+   Não necessariamente. A votação considera apenas a ordem das preferências, não sua
+   intensidade: o vereador que valoriza muito mais a cultura não altera o resultado. O teorema
+   do eleitor mediano diz quem vence a votação, não se o resultado é bom para a sociedade.
+   O resultado só coincide com o eficiente em casos especiais, por exemplo, quando a mediana
+   iguala a média das valorações.
+
