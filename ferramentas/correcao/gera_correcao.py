@@ -5,6 +5,9 @@ Uso (a partir da raiz do repositório):
 
 O JSON (veja exemplo.json) tem a nota da atividade (1 a 10), a nota de português (1 a 10, à parte),
 o que foi bem, o que reforçar, cada questão corrigida e os pontos de português.
+Regras da Ione: corrigir só as questões que ela fez; todas as questões feitas têm o mesmo peso e somam 10.
+Cada questão pode ter "tipo" ("teoria" ou "calculo") e "valor" (aproveitamento de 0 a 1): o PDF mostra
+o desempenho e o tempo médio por tipo, para deixar mais coerentes os tempos das próximas tarefas.
 
 Saída:
   - public/arquivos/<arquivo>.pdf
@@ -56,12 +59,34 @@ def main(caminho_json):
     s.append(caixa(Paragraph(f"<b>O que você estudou bem</b><br/>{esc(c['bem'])}", quad), "#DCEFE3", VERDE)); s.append(Spacer(1, 6))
     s.append(caixa(Paragraph(f"<b>O que precisa reforçar</b><br/>{esc(c['mal'])}", quad), "#FBE9DF", LARANJA))
 
+    qs = c["questoes"]
+    if qs and all("tipo" in q and "valor" in q for q in qs):
+        s.append(Paragraph("Teoria × cálculo", ah))
+        dados = [[Paragraph(f"<b>{x}</b>", cell) for x in ("Tipo", "Questões", "Aproveitamento", "Nota (0 a 10)")]]
+        for chave, rotulo in (("teoria", "Teoria (explicar com palavras)"), ("calculo", "Cálculo e aplicação (números, árvore, matriz, gráfico)")):
+            grupo = [q for q in qs if q["tipo"] == chave]
+            if not grupo: continue
+            ap = sum(float(q["valor"]) for q in grupo) / len(grupo)
+            dados.append([Paragraph(rotulo, quad), Paragraph(", ".join(str(q["numero"]) for q in grupo), cell),
+                          Paragraph(f"{round(ap * 100)}%", cell), Paragraph(num(round(ap * 10, 1)), cell)])
+        t = Table(dados, colWidths=[6.2 * cm, 3.0 * cm, 3.8 * cm, 3.4 * cm])
+        t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E4EDF4")), ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#C9D3DD")),
+                               ("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
+        s.append(t)
+        if c.get("minutos_real"):
+            m = int(c["minutos_real"])
+            s.append(Spacer(1, 4))
+            s.append(Paragraph(f"Tempo: {m} min para {len(qs)} questões, cerca de {num(round(m / len(qs), 1))} min por questão.", quad))
+        if c.get("nota_tempo"):
+            s.append(Paragraph(esc(c["nota_tempo"]), quad))
+
     s.append(Paragraph("Questão por questão", ah))
     for q in c["questoes"]:
         rot, cor, fundo = STATUS.get(q.get("status", "errado"), STATUS["errado"])
         bloco = [CondPageBreak(4 * cm),
                  Paragraph(f"<b>Questão {esc(q['numero'])}</b> · <font color='{cor.hexval()[2:] and '#' + cor.hexval()[2:]}'><b>{rot}</b></font>"
-                           + (f" · {esc(q['pontos'])}" if q.get("pontos") else ""), ah3)]
+                           + (f" · {esc(q['pontos'])}" if q.get("pontos") else "")
+                           + (f" · <font color='#5B6B7B'>{'Teoria' if q.get('tipo') == 'teoria' else 'Cálculo/aplicação'}</font>" if q.get("tipo") else ""), ah3)]
         if q.get("enunciado"): bloco.append(Paragraph(f"<i>{esc(q['enunciado'])}</i>", body))
         if q.get("sua_resposta"): bloco.append(Paragraph(f"<b>Sua resposta:</b> {esc(q['sua_resposta'])}", body))
         if q.get("comentario"): bloco.append(caixa(Paragraph(f"<b>{'Por que está certo' if q.get('status') == 'certo' else 'Onde errou'}</b><br/>{esc(q['comentario'])}", quad), fundo, cor))
