@@ -82,7 +82,7 @@ export default function Planetas() {
 
 // ---------- A galáxia do período ----------
 // No centro de tudo, a maior estrela: Cristo. Ela cresce no ritmo normal (com as horas de foco do período),
-// mas o BRILHO cresce mais rápido com a vida na igreja: devocional, cultos/blocos da Igreja e tarefas da área Igreja.
+// mas o BRILHO cresce mais rápido com a vida na igreja: devocional e cultos (blocos da Igreja, que valem o dobro).
 // Em volta: o seu planeta (uma luz de cidade por dia com foco) e uma órbita por matéria
 // (planeta maior quanto mais horas, anel a partir de 10 h e uma lua a cada 5 h).
 // No fundo: uma estrela por sessão de foco, maior quanto mais longa.
@@ -93,13 +93,13 @@ function brilhoDeCristo(d, per) {
   const blocosIgreja = new Set(d.blocos_fixos.filter((b) => igreja && b.area_id === igreja.id).map((b) => b.id))
   const leituras = d.habito_marcas.filter((m) => devocional.includes(m.habito_id) && dentro(m.dia)).length
   const cultos = d.blocos_feitos.filter((b) => blocosIgreja.has(b.bloco_id) && dentro(b.dia)).length
-  const tarefas = d.tarefas.filter((t) => t.feita && igreja && t.area_id === igreja.id && t.dia && dentro(t.dia)).length
-  const pontos = leituras + 2 * cultos + tarefas
+  const pontos = leituras + 2 * cultos
   const dias = per.a === per.b ? 1 : diasPassados(per)
-  return { valor: Math.min(1, 0.2 + (0.8 * pontos) / (dias * 1.2)), leituras, cultos, tarefas }
+  return { valor: Math.min(1, 0.2 + (0.8 * pontos) / (dias * 1.2)), leituras, cultos }
 }
 
 function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
+  const [nomeCristo, setNomeCristo] = useState(false) // o nome aparece só ao tocar na estrela
   const W = 400
   const H = 320
   const cx = W / 2
@@ -208,8 +208,9 @@ function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
         {voce.atras && desenhaVoce()}
         {planetas.filter((p) => p.atras).map(desenhaPlaneta)}
 
-        <g className="cristo">
-          <title>{`Cristo, no centro de tudo. Brilho ${Math.round(b * 100)}%: ${luz.leituras} ${luz.leituras === 1 ? 'devocional' : 'devocionais'}, ${luz.cultos} na igreja${luz.tarefas ? `, ${luz.tarefas} ${luz.tarefas === 1 ? 'tarefa' : 'tarefas'} da Igreja` : ''}`}</title>
+        <g className="cristo" role="button" tabIndex={0} aria-pressed={nomeCristo} aria-label="Cristo: tocar para mostrar o nome"
+          onClick={() => setNomeCristo((v) => !v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setNomeCristo((v) => !v) } }}>
+          <title>{`Cristo, no centro de tudo. Brilho ${Math.round(b * 100)}%: ${luz.leituras} ${luz.leituras === 1 ? 'devocional' : 'devocionais'} e ${luz.cultos} na igreja`}</title>
           <circle className="cristo-halo" cx={cx} cy={cy} r={rCristo * (2 + 3.5 * b)} fill="url(#halo)" opacity={0.35 + 0.65 * b} />
           <rect x={cx - 1.1} y={cy - raioV} width="2.2" height={raioV * 2} fill="url(#raio-v)" opacity={0.45 + 0.55 * b} />
           <rect x={cx - raioH} y={cy - rCristo * 0.55 - 1} width={raioH * 2} height="2" fill="url(#raio-h)" opacity={0.4 + 0.6 * b} />
@@ -217,7 +218,7 @@ function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
             <rect key={g} x={cx - 0.5} y={cy - rCristo * (1.4 + 1.6 * b)} width="1" height={rCristo * (2.8 + 3.2 * b)} fill="url(#raio-v)" opacity={0.15 + 0.35 * b} transform={`rotate(${g} ${cx} ${cy})`} />
           ))}
           <circle cx={cx} cy={cy} r={rCristo} fill="url(#nucleo)" />
-          <text x={cx} y={cy - rCristo - 6} textAnchor="middle" className="universo-rotulo cristo-nome">Cristo</text>
+          {nomeCristo && <text x={cx} y={cy - rCristo - 6} textAnchor="middle" className="universo-rotulo cristo-nome">Cristo</text>}
         </g>
 
         {!voce.atras && desenhaVoce()}
@@ -225,7 +226,7 @@ function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
         {!total && <text x={cx} y={H - 30} textAnchor="middle" className="universo-rotulo">Nenhum foco neste período</text>}
       </svg>
       <div className="universo-contas">
-        <span title="Brilho de Cristo: cresce com o devocional, a igreja e as tarefas da área Igreja">✝ {Math.round(b * 100)}%</span>
+        <span title="Brilho de Cristo: cresce com o devocional e a igreja">✝ {Math.round(b * 100)}%</span>
         <span title="Sessões de foco (estrelas)">✦ {nEstrelas}</span>
         <span title="Tempo de foco">{duracao(total)}</span>
         <span title="Dias com foco (luzes no seu planeta)">◉ {diasComFoco}</span>
