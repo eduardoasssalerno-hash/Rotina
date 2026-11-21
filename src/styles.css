@@ -695,3 +695,9 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .linha-horas .eixo-texto { fill: var(--suave); font-size: 9px; font-family: var(--fonte); }
 .legenda-materias li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ver-mais { align-self: center; }
+
+.universo .cristo-nome { fill: #FFE7A3; }
+.universo .cristo-halo { animation: respira 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes respira { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .universo .cristo-halo { animation: none; } }
+.universo-contas { flex-wrap: wrap; justify-content: flex-end; }

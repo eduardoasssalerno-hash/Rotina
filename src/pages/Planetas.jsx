@@ -38,7 +38,7 @@ export default function Planetas() {
 
   return (
     <div className="tela">
-      <Cabecalho titulo="Planetas" sub="Cada sessão de foco vira uma estrela; cada matéria, um planeta em órbita do seu">
+      <Cabecalho titulo="Planetas" sub="No centro, Cristo: o brilho cresce com o devocional e a igreja. Cada sessão de foco vira uma estrela; cada matéria, um planeta">
         <button type="button" className="btn btn-primario" onClick={() => setEditando({})}><Icone nome="mais" tamanho={20} />Planeta</button>
       </Cabecalho>
 
@@ -50,7 +50,7 @@ export default function Planetas() {
           <button type="button" className="btn-icone" onClick={() => setDesloca((n) => Math.min(0, n + 1))} disabled={desloca === 0} aria-label="Próximo período"><Icone nome="avancar" /></button>
           {desloca !== 0 && <button type="button" className="btn btn-sec btn-peq" onClick={() => setDesloca(0)}>Atual</button>}
         </div>
-        <Universo sessoes={sessoes} materias={materias} total={total} corDe={corDe} d={d} chave={`${visao}${per.a}`} />
+        <Universo sessoes={sessoes} materias={materias} total={total} corDe={corDe} d={d} chave={`${visao}${per.a}`} per={per} />
       </section>
 
       <div className="grade-hoje">
@@ -81,51 +81,75 @@ export default function Planetas() {
 }
 
 // ---------- A galáxia do período ----------
-// Fundo: uma estrela por sessão (maior quanto mais longa). Centro: o seu planeta, que cresce com as
-// horas do período e acende uma luz (cidade) por dia com foco. Em volta: uma órbita por matéria,
-// com o planeta da matéria maior quanto mais horas, anel a partir de 10 h e uma lua a cada 5 h.
-function Universo({ sessoes, materias, total, corDe, d, chave }) {
+// No centro de tudo, a maior estrela: Cristo. Ela cresce no ritmo normal (com as horas de foco do período),
+// mas o BRILHO cresce mais rápido com a vida na igreja: devocional, cultos/blocos da Igreja e tarefas da área Igreja.
+// Em volta: o seu planeta (uma luz de cidade por dia com foco) e uma órbita por matéria
+// (planeta maior quanto mais horas, anel a partir de 10 h e uma lua a cada 5 h).
+// No fundo: uma estrela por sessão de foco, maior quanto mais longa.
+function brilhoDeCristo(d, per) {
+  const igreja = d.areas.find((a) => /igreja/i.test(a.nome))
+  const dentro = (k) => k >= per.a && k <= per.b
+  const devocional = d.habitos.filter((h) => h.plano === 'biblia').map((h) => h.id)
+  const blocosIgreja = new Set(d.blocos_fixos.filter((b) => igreja && b.area_id === igreja.id).map((b) => b.id))
+  const leituras = d.habito_marcas.filter((m) => devocional.includes(m.habito_id) && dentro(m.dia)).length
+  const cultos = d.blocos_feitos.filter((b) => blocosIgreja.has(b.bloco_id) && dentro(b.dia)).length
+  const tarefas = d.tarefas.filter((t) => t.feita && igreja && t.area_id === igreja.id && t.dia && dentro(t.dia)).length
+  const pontos = leituras + 2 * cultos + tarefas
+  const dias = per.a === per.b ? 1 : diasPassados(per)
+  return { valor: Math.min(1, 0.2 + (0.8 * pontos) / (dias * 1.2)), leituras, cultos, tarefas }
+}
+
+function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
   const W = 400
   const H = 320
   const cx = W / 2
   const cy = H / 2 + 4
   const horas = total / 60
-  const rCasa = 16 + Math.min(22, Math.sqrt(horas) * 2.4)
+  // tamanho: ritmo padrão (horas de foco); brilho: igreja
+  const rCristo = 10 + Math.min(12, Math.sqrt(horas) * 1.3)
+  const luz = brilhoDeCristo(d, per)
+  const b = luz.valor
   const diasComFoco = new Set(sessoes.map((s) => s._dia)).size
   const nEstrelas = sessoes.length
   // poucas sessões (um dia) = estrelas maiores; muitas (um ano) = menores
   const escala = nEstrelas > 300 ? 0.75 : nEstrelas > 60 ? 1 : nEstrelas > 15 ? 1.4 : 2
 
-  // estrelas: posição fixa por sessão
   const estrelas = sessoes.map((s) => {
     const r = semente(String(s.id))
     const tam = s.minutos >= 90 ? 2.6 : s.minutos >= 50 ? 1.9 : s.minutos >= 25 ? 1.35 : 0.85
-    return { id: s.id, x: 6 + r() * (W - 12), y: 6 + r() * (H - 12), tam: tam * escala, cor: corDe(marcadorDe(d, s)), brilho: r(), min: s.minutos }
+    return { id: s.id, x: 6 + r() * (W - 12), y: 6 + r() * (H - 12), tam: tam * escala, cor: corDe(marcadorDe(d, s)), brilho: r() }
   })
-  // luzes das cidades no planeta central
-  const rLuz = semente(`luzes${chave}`)
-  const luzes = Array.from({ length: Math.min(90, diasComFoco) }, () => {
-    const a = rLuz() * 2 * Math.PI
-    const dist = Math.sqrt(rLuz()) * rCasa * 0.82
-    return { x: cx + Math.cos(a) * dist, y: cy + Math.sin(a) * dist * 0.96 }
-  })
-  // planetas das matérias (até 6 órbitas)
-  const top = materias.slice(0, 6)
+
+  // órbitas: a 1ª é a sua; as outras, das matérias (até 5)
+  const top = materias.slice(0, 5)
   const maxMin = top[0]?.min || 1
-  // órbitas espalhadas do planeta central até a borda
-  const rx0 = rCasa + 32
+  const rx0 = rCristo + 42
   const rxMax = W / 2 - 22
-  const passo = top.length > 1 ? (rxMax - rx0) / (top.length - 1) : 0
-  const planetas = top.map((m, i) => {
-    const rx = top.length > 1 ? rx0 + i * passo : rx0 + 30
-    const ry = rx * 0.4
-    const ang = semente(m.nome)() * 2 * Math.PI
-    const r = 6 + 11 * Math.sqrt(m.min / maxMin)
-    return { ...m, rx, ry, x: cx + rx * Math.cos(ang), y: cy + ry * Math.sin(ang), r, anel: m.min >= 600, luas: Math.min(3, Math.floor(m.min / 300)), atras: Math.sin(ang) < 0, acima: i % 2 === 1 }
+  const n = top.length + 1
+  const passo = n > 1 ? (rxMax - rx0) / (n - 1) : 0
+  const posicao = (i, nome) => {
+    const rx = rx0 + i * passo
+    // a 1ª órbita passa longe da estrela; as outras, cada vez mais abertas
+    const ry = Math.max(rx * 0.44, rCristo + 18 + i * 9)
+    // ângulo de ouro entre as órbitas: os planetas nunca ficam empilhados um sobre o outro
+    const ang = 0.55 + i * 2.39996
+    // rótulo para fora do centro: em cima de quem está em cima, embaixo de quem está embaixo
+    return { rx, ry, x: cx + rx * Math.cos(ang), y: cy + ry * Math.sin(ang), atras: Math.sin(ang) < 0, acima: Math.sin(ang) < 0 }
+  }
+  const voce = { nome: 'Você', ...posicao(0, `voce${chave}`), r: 8 + Math.min(8, Math.sqrt(horas) * 0.9) }
+  const rLuz = semente(`luzes${chave}`)
+  const luzes = Array.from({ length: Math.min(70, diasComFoco) }, () => {
+    const a = rLuz() * 2 * Math.PI
+    const dist = Math.sqrt(rLuz()) * voce.r * 0.8
+    return { x: voce.x + Math.cos(a) * dist, y: voce.y + Math.sin(a) * dist }
   })
-  // céu de fundo fixo e bem fraco (as estrelas de verdade são as sessões)
+  const planetas = top.map((m, i) => ({
+    ...m, ...posicao(i + 1, m.nome), r: 6 + 10 * Math.sqrt(m.min / maxMin),
+    anel: m.min >= 600, luas: Math.min(3, Math.floor(m.min / 300)),
+  }))
   const rFundo = semente('fundo')
   const fundo = Array.from({ length: 70 }, () => ({ x: rFundo() * W, y: rFundo() * H, o: 0.12 + rFundo() * 0.2 }))
+
   const desenhaPlaneta = (p) => (
     <g key={p.nome} className="universo-planeta">
       <title>{`${p.nome}: ${duracao(p.min)}`}</title>
@@ -140,16 +164,36 @@ function Universo({ sessoes, materias, total, corDe, d, chave }) {
       <text x={p.x} y={p.acima ? p.y - p.r - (p.anel ? 6 : 5) : p.y + p.r + (p.anel ? 10 : 9)} textAnchor="middle" className="universo-rotulo">{p.nome.length > 18 ? `${p.nome.slice(0, 17)}…` : p.nome}</text>
     </g>
   )
+  const desenhaVoce = () => (
+    <g key="voce" className="universo-planeta">
+      <title>{`Você: ${duracao(total)} de foco em ${diasComFoco} ${diasComFoco === 1 ? 'dia' : 'dias'}`}</title>
+      <circle cx={voce.x} cy={voce.y} r={voce.r * 1.3} fill="url(#atmosfera)" />
+      <circle cx={voce.x} cy={voce.y} r={voce.r} fill="url(#casa)" opacity={total ? 1 : 0.5} />
+      <g clipPath="url(#recorte-voce)">
+        <ellipse cx={voce.x - voce.r * 0.25} cy={voce.y - voce.r * 0.1} rx={voce.r * 0.55} ry={voce.r * 0.3} fill="#3E7A5C" opacity="0.55" />
+        {luzes.map((l, i) => <circle key={i} cx={l.x} cy={l.y} r="0.7" fill="#FFD98A" opacity="0.95" />)}
+        <circle cx={voce.x} cy={voce.y} r={voce.r} fill="url(#sombra-planeta)" />
+      </g>
+      <text x={voce.x} y={voce.acima ? voce.y - voce.r - 5 : voce.y + voce.r + 9} textAnchor="middle" className="universo-rotulo">Você</text>
+    </g>
+  )
+  // raios da estrela: a cruz de luz (vertical mais longa) e raios finos, todos crescendo com o brilho
+  const raioV = rCristo * (2.2 + 4.5 * b)
+  const raioH = rCristo * (1.6 + 3 * b)
 
   return (
     <div className="universo">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${nEstrelas} sessões de foco, ${duracao(total)} no período${top.length ? `; matérias: ${top.map((m) => `${m.nome} ${duracao(m.min)}`).join(', ')}` : ''}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`No centro, Cristo, com brilho de ${Math.round(b * 100)}%. ${nEstrelas} sessões de foco, ${duracao(total)} no período${top.length ? `; matérias: ${top.map((m) => `${m.nome} ${duracao(m.min)}`).join(', ')}` : ''}`}>
         <defs>
           <radialGradient id="ceu" cx="50%" cy="55%" r="70%"><stop offset="0" stopColor="#13284A" /><stop offset="1" stopColor="#050B17" /></radialGradient>
           <radialGradient id="casa" cx="35%" cy="30%" r="80%"><stop offset="0" stopColor="#5F8FC4" /><stop offset="0.55" stopColor="#24497A" /><stop offset="1" stopColor="#0C1E38" /></radialGradient>
-          <radialGradient id="atmosfera" r="50%"><stop offset="0.78" stopColor="#7FB2E6" stopOpacity="0" /><stop offset="0.9" stopColor="#7FB2E6" stopOpacity="0.35" /><stop offset="1" stopColor="#7FB2E6" stopOpacity="0" /></radialGradient>
+          <radialGradient id="atmosfera" r="50%"><stop offset="0.72" stopColor="#7FB2E6" stopOpacity="0" /><stop offset="0.86" stopColor="#7FB2E6" stopOpacity="0.4" /><stop offset="1" stopColor="#7FB2E6" stopOpacity="0" /></radialGradient>
           <radialGradient id="sombra-planeta" cx="30%" cy="28%" r="85%"><stop offset="0.5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.45" /></radialGradient>
-          <clipPath id="recorte-casa"><circle cx={cx} cy={cy} r={rCasa} /></clipPath>
+          <radialGradient id="nucleo"><stop offset="0" stopColor="#FFFFFF" /><stop offset="0.45" stopColor="#FFF4D6" /><stop offset="1" stopColor="#F5C451" /></radialGradient>
+          <radialGradient id="halo"><stop offset="0" stopColor="#FFE7A3" stopOpacity="0.9" /><stop offset="0.35" stopColor="#F5C451" stopOpacity="0.35" /><stop offset="1" stopColor="#F5C451" stopOpacity="0" /></radialGradient>
+          <linearGradient id="raio-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFF4D6" stopOpacity="0" /><stop offset="0.5" stopColor="#FFF4D6" stopOpacity="1" /><stop offset="1" stopColor="#FFF4D6" stopOpacity="0" /></linearGradient>
+          <linearGradient id="raio-h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#FFF4D6" stopOpacity="0" /><stop offset="0.5" stopColor="#FFF4D6" stopOpacity="1" /><stop offset="1" stopColor="#FFF4D6" stopOpacity="0" /></linearGradient>
+          <clipPath id="recorte-voce"><circle cx={voce.x} cy={voce.y} r={voce.r} /></clipPath>
         </defs>
         <rect width={W} height={H} fill="url(#ceu)" />
         {fundo.map((f, i) => <circle key={`f${i}`} cx={f.x} cy={f.y} r="0.5" fill="#fff" opacity={f.o} />)}
@@ -160,23 +204,31 @@ function Universo({ sessoes, materias, total, corDe, d, chave }) {
             {e.tam >= 2.5 && <path d={`M${e.x - e.tam * 3} ${e.y}H${e.x + e.tam * 3}M${e.x} ${e.y - e.tam * 3}V${e.y + e.tam * 3}`} stroke="#fff" strokeOpacity="0.5" strokeWidth="0.5" />}
           </g>
         ))}
-        {planetas.map((p) => <ellipse key={`o${p.nome}`} cx={cx} cy={cy} rx={p.rx} ry={p.ry} fill="none" stroke="#C5D9E7" strokeOpacity="0.22" strokeDasharray="2 3" />)}
+        {[voce, ...planetas].map((p) => <ellipse key={`o${p.nome}`} cx={cx} cy={cy} rx={p.rx} ry={p.ry} fill="none" stroke="#C5D9E7" strokeOpacity="0.22" strokeDasharray="2 3" />)}
+        {voce.atras && desenhaVoce()}
         {planetas.filter((p) => p.atras).map(desenhaPlaneta)}
-        <circle cx={cx} cy={cy} r={rCasa * 1.25} fill="url(#atmosfera)" />
-        <circle cx={cx} cy={cy} r={rCasa} fill="url(#casa)" opacity={total ? 1 : 0.45} />
-        <g clipPath="url(#recorte-casa)">
-          <ellipse cx={cx - rCasa * 0.25} cy={cy - rCasa * 0.1} rx={rCasa * 0.55} ry={rCasa * 0.3} fill="#3E7A5C" opacity="0.55" />
-          <ellipse cx={cx + rCasa * 0.4} cy={cy + rCasa * 0.35} rx={rCasa * 0.35} ry={rCasa * 0.22} fill="#3E7A5C" opacity="0.5" />
-          {luzes.map((l, i) => <circle key={i} cx={l.x} cy={l.y} r="0.95" fill="#FFD98A" opacity="0.95" />)}
-          <circle cx={cx} cy={cy} r={rCasa} fill="url(#sombra-planeta)" />
+
+        <g className="cristo">
+          <title>{`Cristo, no centro de tudo. Brilho ${Math.round(b * 100)}%: ${luz.leituras} ${luz.leituras === 1 ? 'devocional' : 'devocionais'}, ${luz.cultos} na igreja${luz.tarefas ? `, ${luz.tarefas} ${luz.tarefas === 1 ? 'tarefa' : 'tarefas'} da Igreja` : ''}`}</title>
+          <circle className="cristo-halo" cx={cx} cy={cy} r={rCristo * (2 + 3.5 * b)} fill="url(#halo)" opacity={0.35 + 0.65 * b} />
+          <rect x={cx - 1.1} y={cy - raioV} width="2.2" height={raioV * 2} fill="url(#raio-v)" opacity={0.45 + 0.55 * b} />
+          <rect x={cx - raioH} y={cy - rCristo * 0.55 - 1} width={raioH * 2} height="2" fill="url(#raio-h)" opacity={0.4 + 0.6 * b} />
+          {[30, 60, 120, 150].map((g) => (
+            <rect key={g} x={cx - 0.5} y={cy - rCristo * (1.4 + 1.6 * b)} width="1" height={rCristo * (2.8 + 3.2 * b)} fill="url(#raio-v)" opacity={0.15 + 0.35 * b} transform={`rotate(${g} ${cx} ${cy})`} />
+          ))}
+          <circle cx={cx} cy={cy} r={rCristo} fill="url(#nucleo)" />
+          <text x={cx} y={cy - rCristo - 6} textAnchor="middle" className="universo-rotulo cristo-nome">Cristo</text>
         </g>
+
+        {!voce.atras && desenhaVoce()}
         {planetas.filter((p) => !p.atras).map(desenhaPlaneta)}
-        {!total && <text x={cx} y={cy + rCasa + 20} textAnchor="middle" className="universo-rotulo">Nenhum foco neste período</text>}
+        {!total && <text x={cx} y={H - 30} textAnchor="middle" className="universo-rotulo">Nenhum foco neste período</text>}
       </svg>
       <div className="universo-contas">
+        <span title="Brilho de Cristo: cresce com o devocional, a igreja e as tarefas da área Igreja">✝ {Math.round(b * 100)}%</span>
         <span title="Sessões de foco (estrelas)">✦ {nEstrelas}</span>
         <span title="Tempo de foco">{duracao(total)}</span>
-        <span title="Dias com foco (luzes no seu planeta)">◉ {diasComFoco} {diasComFoco === 1 ? 'dia' : 'dias'}</span>
+        <span title="Dias com foco (luzes no seu planeta)">◉ {diasComFoco}</span>
       </div>
     </div>
   )
