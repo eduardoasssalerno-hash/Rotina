@@ -25,14 +25,25 @@ export function coresDasMaterias(d) {
   }
   const ordem = [...soma.entries()].filter(([m]) => m !== 'Foco livre').sort((a, b) => b[1] - a[1]).map(([m]) => m)
   const cores = new Map(ordem.slice(0, 8).map((m, i) => [m, SERIES[i]]))
-  return (m) => cores.get(m) || COR_OUTROS
+  const fn = (m) => cores.get(m) || COR_OUTROS
+  // nos planetas, toda matéria tem cor própria: depois das 8 da paleta, tons espalhados pelo ângulo de ouro
+  const extras = new Map(ordem.slice(8).map((m, i) => [m, `hsl(${Math.round((i * 137.508 + 20) % 360)} ${48 + (i % 3) * 8}% ${50 + (i % 4) * 4}%)`]))
+  fn.planeta = (m) => cores.get(m) || extras.get(m) || '#9AA6B2'
+  return fn
 }
 
-// Período escolhido: 'dia' | 'semana' | 'mes' | 'ano', deslocado n vezes para trás
-export function periodo(visao, desloca) {
+// Período escolhido: 'dia' | 'semana' | 'mes' | 'ano' | 'tudo', deslocado n vezes para trás
+export function periodo(visao, desloca, d) {
   const hj = hoje()
   let ini, fim, titulo
-  if (visao === 'dia') {
+  if (visao === 'tudo') {
+    // panorama geral: da primeira sessão até hoje
+    const primeira = d?.sessoes_foco.reduce((m, s) => (s.inicio < m ? s.inicio : m), new Date().toISOString())
+    const x = primeira ? new Date(primeira) : hj
+    ini = new Date(x.getFullYear(), x.getMonth(), x.getDate())
+    fim = hj
+    titulo = `Panorama geral · desde ${MESES[ini.getMonth()].slice(0, 3)}/${ini.getFullYear()}`
+  } else if (visao === 'dia') {
     ini = addDias(hj, desloca)
     fim = ini
     titulo = desloca === 0 ? 'Hoje' : desloca === -1 ? 'Ontem' : `${ini.getDate()}/${ini.getMonth() + 1}/${ini.getFullYear()}`

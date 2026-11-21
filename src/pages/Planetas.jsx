@@ -11,7 +11,7 @@ import LinhaTarefa from '../components/LinhaTarefa.jsx'
 import EditorTarefa from '../components/EditorTarefa.jsx'
 import { Cabecalho } from './Shell.jsx'
 
-const VISOES = [{ v: 'dia', label: 'Dia' }, { v: 'semana', label: 'Semana' }, { v: 'mes', label: 'Mês' }, { v: 'ano', label: 'Ano' }]
+const VISOES = [{ v: 'dia', label: 'Dia' }, { v: 'semana', label: 'Semana' }, { v: 'mes', label: 'Mês' }, { v: 'ano', label: 'Ano' }, { v: 'tudo', label: 'Tudo' }]
 const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0]
 const hora = (h) => `${String(h).padStart(2, '0')}:00`
 
@@ -23,17 +23,23 @@ export default function Planetas() {
   const [editando, setEditando] = useState(null) // projeto, ou {} para novo
   const ativos = d.projetos.filter((p) => !p.arquivado).sort((a, b) => a.ordem - b.ordem)
 
-  const per = periodo(visao, desloca)
+  const per = periodo(visao, desloca, d)
   const sessoes = sessoesDo(d, per)
   const corDe = coresDasMaterias(d)
   const total = sessoes.reduce((s, x) => s + x.minutos, 0)
   // minutos por matéria no período
+  // minutos, sessões, primeira e última vez de cada matéria no período
   const porMateria = new Map()
   for (const s of sessoes) {
     const m = marcadorDe(d, s)
-    porMateria.set(m, (porMateria.get(m) || 0) + s.minutos)
+    const x = porMateria.get(m) || { nome: m, min: 0, n: 0, primeira: s._dt, ultima: s._dt }
+    x.min += s.minutos
+    x.n++
+    if (s._dt < x.primeira) x.primeira = s._dt
+    if (s._dt > x.ultima) x.ultima = s._dt
+    porMateria.set(m, x)
   }
-  const materias = [...porMateria.entries()].map(([nome, min]) => ({ nome, min, cor: corDe(nome) })).sort((a, b) => b.min - a.min)
+  const materias = [...porMateria.values()].map((x) => ({ ...x, cor: corDe(x.nome) })).sort((a, b) => b.min - a.min)
   const trocarVisao = (v) => { setVisao(v); setDesloca(0) }
 
   return (
@@ -44,13 +50,13 @@ export default function Planetas() {
 
       <section className="cartao universo-cartao">
         <Segmentos label="Período" value={visao} onChange={trocarVisao} options={VISOES} />
-        <div className="navegar navegar-universo">
+        {visao === 'tudo' ? <div className="navegar navegar-universo"><strong>{per.titulo}</strong></div> : <div className="navegar navegar-universo">
           <button type="button" className="btn-icone" onClick={() => setDesloca((n) => n - 1)} aria-label="Período anterior"><Icone nome="voltar" /></button>
           <strong>{per.titulo}</strong>
           <button type="button" className="btn-icone" onClick={() => setDesloca((n) => Math.min(0, n + 1))} disabled={desloca === 0} aria-label="Próximo período"><Icone nome="avancar" /></button>
           {desloca !== 0 && <button type="button" className="btn btn-sec btn-peq" onClick={() => setDesloca(0)}>Atual</button>}
-        </div>
-        <Universo sessoes={sessoes} materias={materias} total={total} corDe={corDe} d={d} chave={`${visao}${per.a}`} per={per} />
+        </div>}
+        <Universo visao={visao} sessoes={sessoes} materias={materias} total={total} corDe={corDe} d={d} chave={`${visao}${per.a}`} per={per} />
       </section>
 
       <div className="grade-hoje">
@@ -83,9 +89,7 @@ export default function Planetas() {
 // ---------- A galáxia do período ----------
 // No centro de tudo, a maior estrela: Cristo. Ela cresce no ritmo normal (com as horas de foco do período),
 // mas o BRILHO cresce mais rápido com a vida na igreja: devocional e cultos (blocos da Igreja, que valem o dobro).
-// Em volta: o seu planeta (uma luz de cidade por dia com foco) e uma órbita por matéria
-// (planeta maior quanto mais horas, anel a partir de 10 h e uma lua a cada 5 h).
-// No fundo: uma estrela por sessão de foco, maior quanto mais longa.
+// Em volta: um planeta por matéria (veja Universo). No fundo: uma estrela por sessão de foco, maior quanto mais longa.
 function brilhoDeCristo(d, per) {
   const igreja = d.areas.find((a) => /igreja/i.test(a.nome))
   const dentro = (k) => k >= per.a && k <= per.b
@@ -98,10 +102,90 @@ function brilhoDeCristo(d, per) {
   return { valor: Math.min(1, 0.2 + (0.8 * pontos) / (dias * 1.2)), leituras, cultos }
 }
 
-function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
+// Cada matéria tem um planeta próprio, sempre igual: o tipo (gasoso, rochoso, gelado, oceânico, de lava ou de
+// nuvens), o desenho da superfície, a inclinação dos anéis e das luas saem do nome da matéria.
+// Distância até Cristo = há quanto tempo você estudou a matéria pela última vez (mais recente, mais perto).
+// Tamanho = horas de foco no período; anel a partir de 10 h (duplo a partir de 30 h); uma lua a cada 5 h (até 4).
+const TIPOS = ['gasoso', 'rochoso', 'gelado', 'oceano', 'lava', 'nuvens']
+const DIA_MS = 86400000
+// marcas de tempo desenhadas como órbitas-guia, por visão
+const MARCOS = {
+  dia: [[6 * 3600000, '6 h'], [12 * 3600000, '12 h']],
+  semana: [[DIA_MS, '1 dia'], [3 * DIA_MS, '3 dias'], [6 * DIA_MS, '6 dias']],
+  mes: [[7 * DIA_MS, '1 sem.'], [14 * DIA_MS, '2 sem.'], [28 * DIA_MS, '4 sem.']],
+  ano: [[30 * DIA_MS, '1 mês'], [90 * DIA_MS, '3 meses'], [180 * DIA_MS, '6 meses'], [330 * DIA_MS, '11 meses']],
+  tudo: [[30 * DIA_MS, '1 mês'], [180 * DIA_MS, '6 meses'], [365 * DIA_MS, '1 ano'], [730 * DIA_MS, '2 anos'], [1095 * DIA_MS, '3 anos']],
+}
+const curto = (nome) => (nome.length > 18 ? `${nome.slice(0, 17)}…` : nome)
+const meiaLargura = (nome) => curto(nome).length * 2.7 // rótulo não sai da tela
+const ha = (ms) => {
+  const dias = Math.floor(ms / DIA_MS)
+  if (dias <= 0) return 'hoje'
+  if (dias === 1) return 'ontem'
+  if (dias < 31) return `há ${dias} dias`
+  const meses = Math.round(dias / 30)
+  if (meses < 12) return `há ${meses} ${meses === 1 ? 'mês' : 'meses'}`
+  const anos = Math.floor(dias / 365)
+  const resto = Math.round((dias - anos * 365) / 30)
+  return `há ${anos} ${anos === 1 ? 'ano' : 'anos'}${resto ? ` e ${resto} ${resto === 1 ? 'mês' : 'meses'}` : ''}`
+}
+
+function Superficie({ p, i }) {
+  // textura dentro do planeta (recortada pelo círculo)
+  const r = semente(`textura${p.nome}`)
+  const { x, y, r: R } = p
+  const el = []
+  if (p.tipo === 'gasoso') {
+    for (let k = 0; k < 5; k++) {
+      const yy = y - R + (k + 0.5) * (2 * R / 5) + (r() - 0.5) * R * 0.15
+      el.push(<ellipse key={k} cx={x} cy={yy} rx={R * 1.2} ry={R * (0.07 + r() * 0.08)} fill={k % 2 ? '#fff' : '#000'} opacity={0.12 + r() * 0.12} />)
+    }
+    if (R > 7) el.push(<ellipse key="m" cx={x + R * (r() - 0.5)} cy={y + R * 0.25} rx={R * 0.22} ry={R * 0.12} fill="#fff" opacity="0.35" />)
+  } else if (p.tipo === 'rochoso') {
+    for (let k = 0; k < 6; k++) {
+      const a = r() * 2 * Math.PI
+      const dd = Math.sqrt(r()) * R * 0.75
+      const cr = R * (0.1 + r() * 0.16)
+      el.push(<g key={k}><circle cx={x + Math.cos(a) * dd} cy={y + Math.sin(a) * dd} r={cr} fill="#000" opacity="0.22" /><circle cx={x + Math.cos(a) * dd - cr * 0.25} cy={y + Math.sin(a) * dd - cr * 0.25} r={cr * 0.7} fill="#fff" opacity="0.08" /></g>)
+    }
+  } else if (p.tipo === 'gelado') {
+    el.push(<ellipse key="n" cx={x} cy={y - R * 0.95} rx={R * 0.8} ry={R * 0.35} fill="#fff" opacity="0.85" />)
+    el.push(<ellipse key="s" cx={x} cy={y + R * 0.98} rx={R * 0.6} ry={R * 0.25} fill="#fff" opacity="0.7" />)
+    el.push(<path key="f" d={`M${x - R} ${y - R * 0.1}Q${x} ${y + R * 0.2} ${x + R} ${y - R * 0.05}`} stroke="#fff" strokeOpacity="0.35" strokeWidth={R * 0.08} fill="none" />)
+  } else if (p.tipo === 'oceano') {
+    for (let k = 0; k < 3; k++) {
+      const a = r() * 2 * Math.PI
+      const dd = r() * R * 0.6
+      el.push(<ellipse key={k} cx={x + Math.cos(a) * dd} cy={y + Math.sin(a) * dd} rx={R * (0.25 + r() * 0.25)} ry={R * (0.15 + r() * 0.15)} fill="#2E6B4A" opacity="0.75" transform={`rotate(${Math.round(r() * 180)} ${x} ${y})`} />)
+    }
+    el.push(<ellipse key="n" cx={x} cy={y - R * 0.98} rx={R * 0.5} ry={R * 0.18} fill="#fff" opacity="0.7" />)
+  } else if (p.tipo === 'lava') {
+    el.push(<circle key="b" cx={x} cy={y} r={R} fill="#1A0E0A" opacity="0.45" />)
+    for (let k = 0; k < 4; k++) {
+      const a = r() * 2 * Math.PI
+      const x1 = x + Math.cos(a) * R * 0.9
+      const y1 = y + Math.sin(a) * R * 0.9
+      const x2 = x + Math.cos(a + 2.4) * R * 0.5
+      const y2 = y + Math.sin(a + 2.4) * R * 0.5
+      el.push(<path key={k} d={`M${x1} ${y1}L${(x1 + x2) / 2 + (r() - 0.5) * R * 0.4} ${(y1 + y2) / 2 + (r() - 0.5) * R * 0.4}L${x2} ${y2}`} stroke="#FFB347" strokeWidth={Math.max(0.5, R * 0.08)} fill="none" opacity="0.9" strokeLinecap="round" />)
+    }
+  } else {
+    for (let k = 0; k < 4; k++) {
+      const yy = y - R * 0.6 + k * R * 0.4
+      el.push(<path key={k} d={`M${x - R} ${yy}q${R * 0.5} ${-R * 0.25} ${R} 0t${R} 0`} stroke="#fff" strokeOpacity={0.25 + r() * 0.2} strokeWidth={R * 0.14} fill="none" strokeLinecap="round" />)
+    }
+  }
+  return <g clipPath={`url(#corte-${i})`}>{el}</g>
+}
+
+function Universo({ visao, sessoes, materias, total, corDe, d, chave, per }) {
   const [nomeCristo, setNomeCristo] = useState(false) // o nome aparece só ao tocar na estrela
+  const [selNome, setSelNome] = useState(null)
+  // no celular a cena fica mais alta, para as órbitas terem espaço
+  const estreito = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 600px)').matches
   const W = 400
-  const H = 320
+  const H = estreito ? 440 : 320
+  const achata = estreito ? 0.7 : 0.44
   const cx = W / 2
   const cy = H / 2 + 4
   const horas = total / 60
@@ -109,129 +193,159 @@ function Universo({ sessoes, materias, total, corDe, d, chave, per }) {
   const rCristo = 10 + Math.min(12, Math.sqrt(horas) * 1.3)
   const luz = brilhoDeCristo(d, per)
   const b = luz.valor
-  const diasComFoco = new Set(sessoes.map((s) => s._dia)).size
   const nEstrelas = sessoes.length
-  // poucas sessões (um dia) = estrelas maiores; muitas (um ano) = menores
   const escala = nEstrelas > 300 ? 0.75 : nEstrelas > 60 ? 1 : nEstrelas > 15 ? 1.4 : 2
 
   const estrelas = sessoes.map((s) => {
     const r = semente(String(s.id))
     const tam = s.minutos >= 90 ? 2.6 : s.minutos >= 50 ? 1.9 : s.minutos >= 25 ? 1.35 : 0.85
-    return { id: s.id, x: 6 + r() * (W - 12), y: 6 + r() * (H - 12), tam: tam * escala, cor: corDe(marcadorDe(d, s)), brilho: r() }
+    return { id: s.id, x: 6 + r() * (W - 12), y: 6 + r() * (H - 12), tam: tam * escala, cor: corDe.planeta(marcadorDe(d, s)), brilho: r() }
   })
 
-  // órbitas: a 1ª é a sua; as outras, das matérias (até 5)
-  const top = materias.slice(0, 5)
-  const maxMin = top[0]?.min || 1
-  const rx0 = rCristo + 42
-  const rxMax = W / 2 - 22
-  const n = top.length + 1
-  const passo = n > 1 ? (rxMax - rx0) / (n - 1) : 0
-  const posicao = (i, nome) => {
-    const rx = rx0 + i * passo
-    // a 1ª órbita passa longe da estrela; as outras, cada vez mais abertas
-    const ry = Math.max(rx * 0.44, rCristo + 18 + i * 9)
-    // ângulo de ouro entre as órbitas: os planetas nunca ficam empilhados um sobre o outro
-    const ang = 0.55 + i * 2.39996
-    // rótulo para fora do centro: em cima de quem está em cima, embaixo de quem está embaixo
-    return { rx, ry, x: cx + rx * Math.cos(ang), y: cy + ry * Math.sin(ang), atras: Math.sin(ang) < 0, acima: Math.sin(ang) < 0 }
-  }
-  const voce = { nome: 'Você', ...posicao(0, `voce${chave}`), r: 8 + Math.min(8, Math.sqrt(horas) * 0.9) }
-  const rLuz = semente(`luzes${chave}`)
-  const luzes = Array.from({ length: Math.min(70, diasComFoco) }, () => {
-    const a = rLuz() * 2 * Math.PI
-    const dist = Math.sqrt(rLuz()) * voce.r * 0.8
-    return { x: voce.x + Math.cos(a) * dist, y: voce.y + Math.sin(a) * dist }
+  // distância = tempo desde a última vez, em escala logarítmica: o recente ganha mais espaço,
+  // e anos de distância ainda cabem na tela
+  const agoraMs = Math.min(Date.now(), per.fim.getTime() + DIA_MS)
+  const vida = visao === 'dia' ? DIA_MS : Math.max(DIA_MS, agoraMs - per.ini.getTime())
+  const rxMin = rCristo + 22
+  const rxMax = W / 2 - 14
+  const unidade = vida / 80
+  const raio = (ms) => rxMin + (rxMax - rxMin) * Math.min(1, Math.log1p(Math.max(0, ms) / unidade) / Math.log1p(vida / unidade))
+  const orbita = (rx) => ({ rx, ry: Math.max(rx * achata, rCristo + 12) })
+  const maxMin = materias[0]?.min || 1
+  const porRecencia = [...materias].sort((a, b2) => b2.ultima - a.ultima)
+  const rotulados = new Set(materias.slice(0, visao === 'tudo' ? 8 : 10).map((m) => m.nome))
+  const planetas = porRecencia.map((m0, i) => {
+    const m = { ...m0, cor: corDe.planeta(m0.nome) }
+    const h = semente(m.nome)
+    const idade = agoraMs - m.ultima.getTime()
+    const { rx, ry } = orbita(raio(idade))
+    const ang = 0.55 + i * 2.39996 // ângulo de ouro: espalha sem empilhar
+    const r = 3.5 + 11 * Math.sqrt(m.min / maxMin)
+    const x = cx + rx * Math.cos(ang)
+    const y = cy + ry * Math.sin(ang)
+    return {
+      ...m, i, idade, rx, ry, x, y, r, atras: Math.sin(ang) < 0, acima: Math.sin(ang) < 0,
+      tipo: m.nome === 'Indefinido' || m.nome === 'Foco livre' ? 'rochoso' : TIPOS[Math.floor(h() * TIPOS.length)],
+      inclina: -28 + h() * 36, anel: m.min >= 600, anelDuplo: m.min >= 1800, luas: Math.min(4, Math.floor(m.min / 300)), faseLua: h() * 6.28,
+    }
   })
-  const planetas = top.map((m, i) => ({
-    ...m, ...posicao(i + 1, m.nome), r: 6 + 10 * Math.sqrt(m.min / maxMin),
-    anel: m.min >= 600, luas: Math.min(3, Math.floor(m.min / 300)),
-  }))
+  const sel = planetas.find((p) => p.nome === selNome) || null
+  const marcos = (MARCOS[visao] || []).filter(([ms]) => ms < vida * 0.98)
   const rFundo = semente('fundo')
   const fundo = Array.from({ length: 70 }, () => ({ x: rFundo() * W, y: rFundo() * H, o: 0.12 + rFundo() * 0.2 }))
 
-  const desenhaPlaneta = (p) => (
-    <g key={p.nome} className="universo-planeta">
-      <title>{`${p.nome}: ${duracao(p.min)}`}</title>
-      {p.anel && <ellipse cx={p.x} cy={p.y} rx={p.r * 1.9} ry={p.r * 0.55} fill="none" stroke={p.cor} strokeOpacity="0.55" strokeWidth="1.6" transform={`rotate(-14 ${p.x} ${p.y})`} />}
-      <circle cx={p.x} cy={p.y} r={p.r} fill={p.cor} />
-      <circle cx={p.x - p.r * 0.3} cy={p.y - p.r * 0.35} r={p.r * 0.45} fill="#fff" opacity="0.18" />
-      <circle cx={p.x} cy={p.y} r={p.r} fill="url(#sombra-planeta)" />
-      {Array.from({ length: p.luas }, (_, k) => {
-        const a = -0.6 + k * 1.1
-        return <circle key={k} cx={p.x + Math.cos(a) * (p.r + 5)} cy={p.y - Math.sin(a) * (p.r + 4)} r="1.5" fill="#D9E2EC" />
-      })}
-      <text x={p.x} y={p.acima ? p.y - p.r - (p.anel ? 6 : 5) : p.y + p.r + (p.anel ? 10 : 9)} textAnchor="middle" className="universo-rotulo">{p.nome.length > 18 ? `${p.nome.slice(0, 17)}…` : p.nome}</text>
-    </g>
-  )
-  const desenhaVoce = () => (
-    <g key="voce" className="universo-planeta">
-      <title>{`Você: ${duracao(total)} de foco em ${diasComFoco} ${diasComFoco === 1 ? 'dia' : 'dias'}`}</title>
-      <circle cx={voce.x} cy={voce.y} r={voce.r * 1.3} fill="url(#atmosfera)" />
-      <circle cx={voce.x} cy={voce.y} r={voce.r} fill="url(#casa)" opacity={total ? 1 : 0.5} />
-      <g clipPath="url(#recorte-voce)">
-        <ellipse cx={voce.x - voce.r * 0.25} cy={voce.y - voce.r * 0.1} rx={voce.r * 0.55} ry={voce.r * 0.3} fill="#3E7A5C" opacity="0.55" />
-        {luzes.map((l, i) => <circle key={i} cx={l.x} cy={l.y} r="0.7" fill="#FFD98A" opacity="0.95" />)}
-        <circle cx={voce.x} cy={voce.y} r={voce.r} fill="url(#sombra-planeta)" />
+  const desenhaPlaneta = (p) => {
+    const tocado = sel?.nome === p.nome
+    const anel = (esc, op) => (
+      <ellipse cx={p.x} cy={p.y} rx={p.r * esc} ry={p.r * esc * 0.3} fill="none" stroke={p.cor} strokeOpacity={op} strokeWidth={Math.max(1, p.r * 0.22)} transform={`rotate(${p.inclina} ${p.x} ${p.y})`} />
+    )
+    return (
+      <g key={p.nome} className={`universo-planeta ${tocado ? 'sel' : ''}`} role="button" tabIndex={0} aria-pressed={tocado}
+        aria-label={`${p.nome}: ${duracao(p.min)}, última vez ${ha(p.idade)}`}
+        onClick={(e) => { e.stopPropagation(); setSelNome(tocado ? null : p.nome) }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelNome(tocado ? null : p.nome) } }}>
+        <title>{`${p.nome}: ${duracao(p.min)} · última vez ${ha(p.idade)}`}</title>
+        <circle cx={p.x} cy={p.y} r={p.r + 6} fill="transparent" />
+        {tocado && <circle cx={p.x} cy={p.y} r={p.r + 4} fill="none" stroke="#FFE7A3" strokeWidth="1.2" strokeDasharray="2 2" />}
+        {p.r > 6 && <circle cx={p.x} cy={p.y} r={p.r * 1.35} fill={p.cor} opacity="0.12" />}
+        {p.anel && <g className="anel-tras" clipPath={`url(#metade-${p.i})`}>{anel(2, 0.55)}{p.anelDuplo && anel(2.45, 0.3)}</g>}
+        <circle cx={p.x} cy={p.y} r={p.r} fill={p.cor} />
+        <Superficie p={p} i={p.i} />
+        <circle cx={p.x} cy={p.y} r={p.r} fill="url(#sombra-planeta)" />
+        <circle cx={p.x - p.r * 0.35} cy={p.y - p.r * 0.38} r={p.r * 0.32} fill="#fff" opacity="0.16" />
+        {p.anel && <g clipPath={`url(#frente-${p.i})`}>{anel(2, 0.75)}{p.anelDuplo && anel(2.45, 0.4)}</g>}
+        {Array.from({ length: p.luas }, (_, k) => {
+          const a = p.faseLua + k * 1.6
+          const dist = p.r + 4 + k * 2.2
+          return <circle key={k} cx={p.x + Math.cos(a) * dist} cy={p.y + Math.sin(a) * dist * 0.7} r={1.1 + (k % 2) * 0.5} fill="#D9E2EC" />
+        })}
+        {(rotulados.has(p.nome) || tocado) && (
+          <text x={Math.min(Math.max(p.x, meiaLargura(p.nome) + 3), W - meiaLargura(p.nome) - 3)} y={p.acima ? p.y - p.r - (p.anel ? 7 : 4) : p.y + p.r + (p.anel ? 11 : 9)} textAnchor="middle" className="universo-rotulo">{curto(p.nome)}</text>
+        )}
       </g>
-      <text x={voce.x} y={voce.acima ? voce.y - voce.r - 5 : voce.y + voce.r + 9} textAnchor="middle" className="universo-rotulo">Você</text>
-    </g>
-  )
-  // raios da estrela: a cruz de luz (vertical mais longa) e raios finos, todos crescendo com o brilho
+    )
+  }
   const raioV = rCristo * (2.2 + 4.5 * b)
   const raioH = rCristo * (1.6 + 3 * b)
 
   return (
-    <div className="universo">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`No centro, Cristo, com brilho de ${Math.round(b * 100)}%. ${nEstrelas} sessões de foco, ${duracao(total)} no período${top.length ? `; matérias: ${top.map((m) => `${m.nome} ${duracao(m.min)}`).join(', ')}` : ''}`}>
-        <defs>
-          <radialGradient id="ceu" cx="50%" cy="55%" r="70%"><stop offset="0" stopColor="#13284A" /><stop offset="1" stopColor="#050B17" /></radialGradient>
-          <radialGradient id="casa" cx="35%" cy="30%" r="80%"><stop offset="0" stopColor="#5F8FC4" /><stop offset="0.55" stopColor="#24497A" /><stop offset="1" stopColor="#0C1E38" /></radialGradient>
-          <radialGradient id="atmosfera" r="50%"><stop offset="0.72" stopColor="#7FB2E6" stopOpacity="0" /><stop offset="0.86" stopColor="#7FB2E6" stopOpacity="0.4" /><stop offset="1" stopColor="#7FB2E6" stopOpacity="0" /></radialGradient>
-          <radialGradient id="sombra-planeta" cx="30%" cy="28%" r="85%"><stop offset="0.5" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.45" /></radialGradient>
-          <radialGradient id="nucleo"><stop offset="0" stopColor="#FFFFFF" /><stop offset="0.45" stopColor="#FFF4D6" /><stop offset="1" stopColor="#F5C451" /></radialGradient>
-          <radialGradient id="halo"><stop offset="0" stopColor="#FFE7A3" stopOpacity="0.9" /><stop offset="0.35" stopColor="#F5C451" stopOpacity="0.35" /><stop offset="1" stopColor="#F5C451" stopOpacity="0" /></radialGradient>
-          <linearGradient id="raio-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFF4D6" stopOpacity="0" /><stop offset="0.5" stopColor="#FFF4D6" stopOpacity="1" /><stop offset="1" stopColor="#FFF4D6" stopOpacity="0" /></linearGradient>
-          <linearGradient id="raio-h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#FFF4D6" stopOpacity="0" /><stop offset="0.5" stopColor="#FFF4D6" stopOpacity="1" /><stop offset="1" stopColor="#FFF4D6" stopOpacity="0" /></linearGradient>
-          <clipPath id="recorte-voce"><circle cx={voce.x} cy={voce.y} r={voce.r} /></clipPath>
-        </defs>
-        <rect width={W} height={H} fill="url(#ceu)" />
-        {fundo.map((f, i) => <circle key={`f${i}`} cx={f.x} cy={f.y} r="0.5" fill="#fff" opacity={f.o} />)}
-        {estrelas.map((e) => (
-          <g key={e.id} className={e.brilho > 0.82 ? 'pisca' : ''} style={{ animationDelay: `${(e.brilho * 4).toFixed(2)}s` }}>
-            {e.tam >= 2.5 && <circle cx={e.x} cy={e.y} r={e.tam * 2.6} fill={e.cor} opacity="0.18" />}
-            <circle cx={e.x} cy={e.y} r={e.tam} fill={e.cor} opacity={0.75 + e.brilho * 0.25} />
-            {e.tam >= 2.5 && <path d={`M${e.x - e.tam * 3} ${e.y}H${e.x + e.tam * 3}M${e.x} ${e.y - e.tam * 3}V${e.y + e.tam * 3}`} stroke="#fff" strokeOpacity="0.5" strokeWidth="0.5" />}
-          </g>
-        ))}
-        {[voce, ...planetas].map((p) => <ellipse key={`o${p.nome}`} cx={cx} cy={cy} rx={p.rx} ry={p.ry} fill="none" stroke="#C5D9E7" strokeOpacity="0.22" strokeDasharray="2 3" />)}
-        {voce.atras && desenhaVoce()}
-        {planetas.filter((p) => p.atras).map(desenhaPlaneta)}
-
-        <g className="cristo" role="button" tabIndex={0} aria-pressed={nomeCristo} aria-label="Cristo: tocar para mostrar o nome"
-          onClick={() => setNomeCristo((v) => !v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setNomeCristo((v) => !v) } }}>
-          <title>{`Cristo, no centro de tudo. Brilho ${Math.round(b * 100)}%: ${luz.leituras} ${luz.leituras === 1 ? 'devocional' : 'devocionais'} e ${luz.cultos} na igreja`}</title>
-          <circle className="cristo-halo" cx={cx} cy={cy} r={rCristo * (2 + 3.5 * b)} fill="url(#halo)" opacity={0.35 + 0.65 * b} />
-          <rect x={cx - 1.1} y={cy - raioV} width="2.2" height={raioV * 2} fill="url(#raio-v)" opacity={0.45 + 0.55 * b} />
-          <rect x={cx - raioH} y={cy - rCristo * 0.55 - 1} width={raioH * 2} height="2" fill="url(#raio-h)" opacity={0.4 + 0.6 * b} />
-          {[30, 60, 120, 150].map((g) => (
-            <rect key={g} x={cx - 0.5} y={cy - rCristo * (1.4 + 1.6 * b)} width="1" height={rCristo * (2.8 + 3.2 * b)} fill="url(#raio-v)" opacity={0.15 + 0.35 * b} transform={`rotate(${g} ${cx} ${cy})`} />
+    <>
+      <div className="universo" onClick={() => setSelNome(null)}>
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`No centro, Cristo, com brilho de ${Math.round(b * 100)}%. ${materias.length} matérias, ${nEstrelas} sessões de foco, ${duracao(total)} no período`}>
+          <defs>
+            <radialGradient id="ceu" cx="50%" cy="55%" r="70%"><stop offset="0" stopColor="#13284A" /><stop offset="1" stopColor="#050B17" /></radialGradient>
+            <radialGradient id="sombra-planeta" cx="32%" cy="28%" r="80%"><stop offset="0.45" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.55" /></radialGradient>
+            <radialGradient id="nucleo"><stop offset="0" stopColor="#FFFFFF" /><stop offset="0.45" stopColor="#FFF4D6" /><stop offset="1" stopColor="#F5C451" /></radialGradient>
+            <radialGradient id="halo"><stop offset="0" stopColor="#FFE7A3" stopOpacity="0.9" /><stop offset="0.35" stopColor="#F5C451" stopOpacity="0.35" /><stop offset="1" stopColor="#F5C451" stopOpacity="0" /></radialGradient>
+            <linearGradient id="raio-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFF4D6" stopOpacity="0" /><stop offset="0.5" stopColor="#FFF4D6" stopOpacity="1" /><stop offset="1" stopColor="#FFF4D6" stopOpacity="0" /></linearGradient>
+            <linearGradient id="raio-h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#FFF4D6" stopOpacity="0" /><stop offset="0.5" stopColor="#FFF4D6" stopOpacity="1" /><stop offset="1" stopColor="#FFF4D6" stopOpacity="0" /></linearGradient>
+            {planetas.map((p) => (
+              <g key={p.i}>
+                <clipPath id={`corte-${p.i}`}><circle cx={p.x} cy={p.y} r={p.r} /></clipPath>
+                {/* anel: metade de trás fica atrás do planeta, metade da frente passa na frente */}
+                <clipPath id={`metade-${p.i}`}><rect x={p.x - p.r * 3} y={p.y - p.r * 3} width={p.r * 6} height={p.r * 3} transform={`rotate(${p.inclina} ${p.x} ${p.y})`} /></clipPath>
+                <clipPath id={`frente-${p.i}`}><rect x={p.x - p.r * 3} y={p.y} width={p.r * 6} height={p.r * 3} transform={`rotate(${p.inclina} ${p.x} ${p.y})`} /></clipPath>
+              </g>
+            ))}
+          </defs>
+          <rect width={W} height={H} fill="url(#ceu)" />
+          {fundo.map((f, k) => <circle key={`f${k}`} cx={f.x} cy={f.y} r="0.5" fill="#fff" opacity={f.o} />)}
+          {estrelas.map((e) => (
+            <g key={e.id} className={e.brilho > 0.82 ? 'pisca' : ''} style={{ animationDelay: `${(e.brilho * 4).toFixed(2)}s` }}>
+              {e.tam >= 2.5 && <circle cx={e.x} cy={e.y} r={e.tam * 2.6} fill={e.cor} opacity="0.18" />}
+              <circle cx={e.x} cy={e.y} r={e.tam} fill={e.cor} opacity={0.75 + e.brilho * 0.25} />
+              {e.tam >= 2.5 && <path d={`M${e.x - e.tam * 3} ${e.y}H${e.x + e.tam * 3}M${e.x} ${e.y - e.tam * 3}V${e.y + e.tam * 3}`} stroke="#fff" strokeOpacity="0.5" strokeWidth="0.5" />}
+            </g>
           ))}
-          <circle cx={cx} cy={cy} r={rCristo} fill="url(#nucleo)" />
-          {nomeCristo && <text x={cx} y={cy - rCristo - 6} textAnchor="middle" className="universo-rotulo cristo-nome">Cristo</text>}
-        </g>
+          {/* órbitas-guia do tempo: quanto mais longe, mais tempo sem estudar */}
+          {marcos.map(([ms, txt], k) => {
+            const o = orbita(raio(ms))
+            const t = 0.25 + k * 0.42 // rótulos em escada, para não se encostarem
+            return (
+              <g key={txt}>
+                <ellipse cx={cx} cy={cy} rx={o.rx} ry={o.ry} fill="none" stroke="#C5D9E7" strokeOpacity="0.2" strokeDasharray="2 3" />
+                <text x={cx + o.rx * Math.cos(t)} y={cy + o.ry * Math.sin(t) + 3} textAnchor="middle" className="universo-marco">{txt}</text>
+              </g>
+            )
+          })}
+          {planetas.filter((p) => p.atras).map(desenhaPlaneta)}
 
-        {!voce.atras && desenhaVoce()}
-        {planetas.filter((p) => !p.atras).map(desenhaPlaneta)}
-        {!total && <text x={cx} y={H - 30} textAnchor="middle" className="universo-rotulo">Nenhum foco neste período</text>}
-      </svg>
-      <div className="universo-contas">
-        <span title="Brilho de Cristo: cresce com o devocional e a igreja">✝ {Math.round(b * 100)}%</span>
-        <span title="Sessões de foco (estrelas)">✦ {nEstrelas}</span>
-        <span title="Tempo de foco">{duracao(total)}</span>
-        <span title="Dias com foco (luzes no seu planeta)">◉ {diasComFoco}</span>
+          <g className="cristo" role="button" tabIndex={0} aria-pressed={nomeCristo} aria-label="Cristo: tocar para mostrar o nome"
+            onClick={(e) => { e.stopPropagation(); setNomeCristo((v) => !v) }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setNomeCristo((v) => !v) } }}>
+            <title>{`Cristo, no centro de tudo. Brilho ${Math.round(b * 100)}%: ${luz.leituras} ${luz.leituras === 1 ? 'devocional' : 'devocionais'} e ${luz.cultos} na igreja`}</title>
+            <circle className="cristo-halo" cx={cx} cy={cy} r={rCristo * (2 + 3.5 * b)} fill="url(#halo)" opacity={0.35 + 0.65 * b} />
+            <rect x={cx - 1.1} y={cy - raioV} width="2.2" height={raioV * 2} fill="url(#raio-v)" opacity={0.45 + 0.55 * b} />
+            <rect x={cx - raioH} y={cy - rCristo * 0.55 - 1} width={raioH * 2} height="2" fill="url(#raio-h)" opacity={0.4 + 0.6 * b} />
+            {[30, 60, 120, 150].map((g) => (
+              <rect key={g} x={cx - 0.5} y={cy - rCristo * (1.4 + 1.6 * b)} width="1" height={rCristo * (2.8 + 3.2 * b)} fill="url(#raio-v)" opacity={0.15 + 0.35 * b} transform={`rotate(${g} ${cx} ${cy})`} />
+            ))}
+            <circle cx={cx} cy={cy} r={rCristo} fill="url(#nucleo)" />
+            {nomeCristo && <text x={cx} y={cy - rCristo - 6} textAnchor="middle" className="universo-rotulo cristo-nome">Cristo</text>}
+          </g>
+
+          {planetas.filter((p) => !p.atras).map(desenhaPlaneta)}
+          {!total && <text x={cx} y={H - 30} textAnchor="middle" className="universo-rotulo">Nenhum foco neste período</text>}
+        </svg>
+        <div className="universo-contas">
+          <span title="Brilho de Cristo: cresce com o devocional e a igreja">✝ {Math.round(b * 100)}%</span>
+          <span title="Matérias (planetas)">◍ {materias.length}</span>
+          <span title="Sessões de foco (estrelas)">✦ {nEstrelas}</span>
+          <span title="Tempo de foco">{duracao(total)}</span>
+        </div>
       </div>
-    </div>
+      {sel ? (
+        <div className="planeta-info">
+          <i style={{ background: sel.cor }} />
+          <div>
+            <strong>{sel.nome}</strong>
+            <span className="suave">{duracao(sel.min)} em {sel.n} {sel.n === 1 ? 'sessão' : 'sessões'} · planeta {sel.tipo === 'oceano' ? 'oceânico' : sel.tipo === 'lava' ? 'de lava' : sel.tipo === 'nuvens' ? 'de nuvens' : sel.tipo}</span>
+            <span className="suave">Última vez {ha(sel.idade)} ({sel.ultima.toLocaleDateString('pt-BR')}) · desde {sel.primeira.toLocaleDateString('pt-BR')}</span>
+          </div>
+        </div>
+      ) : (
+        materias.length > 0 && <p className="suave dica-universo">Toque num planeta para ver a matéria. Mais perto de Cristo = estudada há menos tempo.</p>
+      )}
+    </>
   )
 }
 
@@ -268,6 +382,14 @@ function TempoNoPeriodo({ visao, per, sessoes, total }) {
     rotulos = dias.map((x, i) => (visao === 'semana' ? DIAS_CURTOS[x.getDay()] : i === 0 || (i + 1) % 5 === 0 ? x.getDate() : ''))
     dica = (i, v) => `${DIAS_CURTOS[dias[i].getDay()]} ${dataCurta(dias[i])}: ${duracao(v)}`
     destaque = dias.findIndex((x) => isoDia(x) === isoDia(hj))
+  } else if (visao === 'tudo') {
+    const a0 = per.ini.getFullYear()
+    const anos = Array.from({ length: hj.getFullYear() - a0 + 1 }, (_, i) => a0 + i)
+    valores = anos.map(() => 0)
+    for (const s of sessoes) valores[s._dt.getFullYear() - a0] += s.minutos
+    rotulos = anos.map(String)
+    dica = (i, v) => `${anos[i]}: ${duracao(v)}`
+    destaque = anos.length - 1
   } else {
     valores = Array(12).fill(0)
     for (const s of sessoes) valores[s._dt.getMonth()] += s.minutos

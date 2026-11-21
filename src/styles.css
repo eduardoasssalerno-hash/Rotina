@@ -702,3 +702,12 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 @media (prefers-reduced-motion: reduce) { .universo .cristo-halo { animation: none; } }
 .universo-contas { flex-wrap: wrap; justify-content: flex-end; }
 .universo .cristo { cursor: pointer; outline: none; }
+
+.universo-marco { fill: #C5D9E7; opacity: 0.55; font-size: 7.5px; font-weight: 700; font-family: var(--fonte); }
+.universo-planeta { cursor: pointer; outline: none; }
+.planeta-info { display: flex; gap: 12px; align-items: flex-start; background: var(--superficie-2); border-radius: 14px; padding: 10px 14px; }
+.planeta-info > i { width: 14px; height: 14px; border-radius: 50%; flex: none; margin-top: 4px; }
+.planeta-info > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dica-universo { text-align: center; margin: 0; font-size: 13.5px; }
+.universo-cartao .segmentos { flex-wrap: wrap; justify-content: center; }
+.universo .cristo-halo, .universo .cristo rect { pointer-events: none; }
