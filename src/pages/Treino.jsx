@@ -3,6 +3,7 @@ import { useDados } from '../lib/dados.jsx'
 import { addDias, dataCurta, dataLonga, deIso, hoje, isoDia, DIAS_CURTOS } from '../lib/util.js'
 import { Botao, Field, Icone, Vazio, useToast } from '../components/ui.jsx'
 import Exercicio from '../components/Exercicio.jsx'
+import { marcarTreino } from '../lib/treinoHabito.js'
 import { Cabecalho } from './Shell.jsx'
 
 const DIFICULDADES = [{ v: 'facil', label: 'Fácil' }, { v: 'na_medida', label: 'Na medida' }, { v: 'pesado', label: 'Pesado' }]
@@ -35,7 +36,8 @@ export default function Treino() {
 }
 
 function TreinoDoDia({ iso }) {
-  const { d, salvar } = useDados()
+  const dados = useDados()
+  const { d, salvar } = dados
   const toast = useToast()
   const exercicios = d.exercicios.filter((e) => e.ativo).sort((a, b) => a.ordem - b.ordem)
   const treino = d.treinos.find((t) => t.dia === iso)
@@ -56,6 +58,8 @@ function TreinoDoDia({ iso }) {
     if (t) {
       const ok = await salvar('treinos', { id: t.id, concluido: !t.concluido, concluido_em: t.concluido ? null : new Date().toISOString() })
       if (ok?.concluido) toast('Treino concluído! +10 de energia para o planeta Calistenia')
+      // o hábito Calistenia e o bloco Treino do dia acompanham
+      if (ok) await marcarTreino(dados, iso, !!ok.concluido)
     }
     setConcluindo(false)
   }

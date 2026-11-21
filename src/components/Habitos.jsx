@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
 import { LIVROS, lerPosicao, nomePosicao, seguinte, trecho } from '../lib/biblia.js'
 import { addDias, fmtHora, hoje, isoDia } from '../lib/util.js'
+import { marcarTreino } from '../lib/treinoHabito.js'
 import { Botao, Icone, Modal, useToast } from './ui.jsx'
 
 // Dias seguidos com o hábito feito (contando até hoje ou ontem)
@@ -15,7 +16,8 @@ function sequencia(d, h) {
 }
 
 export default function Habitos({ data = hoje() }) {
-  const { d, gravar, apagar, salvar } = useDados()
+  const dados = useDados()
+  const { d, gravar, apagar, salvar } = dados
   const toast = useToast()
   const [lendo, setLendo] = useState(null)
   const iso = isoDia(data)
@@ -34,6 +36,8 @@ export default function Habitos({ data = hoje() }) {
       return setLendo(h)
     }
     const valor = (marca?.valor || 0) + 1
+    // Calistenia: o bloco Treino do dia acompanha
+    if (h.plano === 'treino') marcarTreino(dados, iso, valor === h.meta, { habito: false })
     if (valor > h.meta) return apagar('habito_marcas', { habito_id: h.id, dia: iso })
     await gravar('habito_marcas', { habito_id: h.id, dia: iso, valor })
     if (valor === h.meta) toast(`${h.nome}: feito!`)

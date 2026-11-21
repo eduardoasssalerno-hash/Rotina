@@ -3,12 +3,14 @@ import { useDados } from '../lib/dados.jsx'
 import { addDias, DIAS_CURTOS, fmtHora, hoje, inicioSemana, isoDia, MESES } from '../lib/util.js'
 import { Botao, Field, Icone, Modal, Segmentos, Vazio } from '../components/ui.jsx'
 import HabitosHoje, { Leitura } from '../components/Habitos.jsx'
+import { marcarTreino } from '../lib/treinoHabito.js'
 import { Cabecalho } from './Shell.jsx'
 
 const ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0]
 
 export default function Habitos() {
-  const { d, gravar, apagar, salvar } = useDados()
+  const dados = useDados()
+  const { d, gravar, apagar, salvar } = dados
   const [lendo, setLendo] = useState(null) // { habito, dia } do devocional marcado pela grade
   const [editando, setEditando] = useState(null)
   const [visao, setVisao] = useState('semana') // 'semana' | 'mes'
@@ -35,6 +37,8 @@ export default function Habitos() {
   // tocar num dia (até hoje) marca ou desmarca o hábito naquele dia
   async function alternarDia(h, k, valor) {
     if (k > isoHoje) return
+    // Calistenia: o bloco Treino do dia acompanha
+    if (h.plano === 'treino') marcarTreino(dados, k, valor < h.meta, { habito: false })
     if (valor >= h.meta) {
       const marca = d.habito_marcas.find((m) => m.habito_id === h.id && m.dia === k)
       if (marca?.nota && !window.confirm(`Desmarcar ${h.nome} em ${k.split('-').reverse().slice(0, 2).join('/')} (${marca.nota})?`)) return

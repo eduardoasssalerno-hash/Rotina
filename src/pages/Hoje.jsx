@@ -4,6 +4,7 @@ import { useSessao } from '../lib/sessao.jsx'
 import { Link } from '../lib/router.jsx'
 import { folgaEm, itensDoDia, tarefasSemHora } from '../lib/agenda.js'
 import { estadoPlaneta } from '../lib/planetas.js'
+import { ehBlocoTreino, marcarTreino } from '../lib/treinoHabito.js'
 import { addDias, dataCurta, dataLonga, deIso, difDias, hhmm, hoje, isoDia, saudacao } from '../lib/util.js'
 import { Icone, Vazio } from '../components/ui.jsx'
 import EditorTarefa from '../components/EditorTarefa.jsx'
@@ -26,7 +27,8 @@ export function useAgora() {
 }
 
 export default function Hoje() {
-  const { d, salvar, gravar, apagar } = useDados()
+  const dados = useDados()
+  const { d, salvar, gravar, apagar } = dados
   const { nome } = useSessao()
   const agora = useAgora()
   // Diário: dá para voltar aos dias anteriores (e ir avançando até hoje)
@@ -52,6 +54,8 @@ export default function Hoje() {
   function alternar(it) {
     if (it.tipo === 'tarefa') return alternarTarefa(salvar, it.tarefa)
     const linha = { bloco_id: it.bloco.id, dia: iso }
+    // bloco Treino: o hábito Calistenia do dia acompanha
+    if (ehBlocoTreino(it.bloco)) marcarTreino(dados, iso, !it.feito, { bloco: false })
     return it.feito ? apagar('blocos_feitos', linha) : gravar('blocos_feitos', linha)
   }
 
