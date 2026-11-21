@@ -24,6 +24,9 @@ export default function Mae() {
   const { d } = useDados()
   const meses = resumoMae(d.lancamentos)
   const atual = meses.find((m) => m.k === chave(hoje())) || meses[0]
+  // somando todos os meses: o que passou de um mês compensa o que faltou em outro
+  const acumulado = Math.round(meses.reduce((s, m) => s + m.falta, 0) * 100) / 100
+  const desde = meses.length ? nomeMes(meses[meses.length - 1].k).replace(/ de \d+$/, '') : ''
   if (!meses.length) {
     return <div className="cartao"><Vazio>Nada separado ainda. Em qualquer lançamento, marque "Dinheiro da mãe" para ele sair das suas finanças e entrar aqui.</Vazio></div>
   }
@@ -35,6 +38,7 @@ export default function Mae() {
           {atual.falta > 0
             ? <><strong>Falta pagar para a sua mãe: {reais(atual.falta)}</strong><span className="suave">Recebido para ela {reais(atual.recebido)} · já pago {reais(atual.pago)}</span></>
             : <><strong>Tudo pago este mês{atual.falta < 0 ? ` (você pagou ${reais(-atual.falta)} a mais)` : ''}</strong><span className="suave">Recebido para ela {reais(atual.recebido)} · pago {reais(atual.pago)}</span></>}
+          {meses.length > 1 && <span className="mae-acumulado">Somando desde {desde}: {acumulado > 0 ? `falta ${reais(acumulado)}` : acumulado < 0 ? `você pagou ${reais(-acumulado)} a mais` : 'tudo certo'}</span>}
         </section>
       )}
       <div className="lista-metas">

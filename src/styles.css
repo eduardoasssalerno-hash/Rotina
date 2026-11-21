@@ -631,3 +631,4 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .mae-destaque.quitado { border-color: var(--verde); box-shadow: inset 4px 0 0 var(--verde); }
 .itens-mae { list-style: none; margin: 8px 0 0; padding: 0; }
 .itens-mae li { display: grid; grid-template-columns: 76px 1fr auto; gap: 8px; align-items: center; min-height: 40px; border-top: 1px solid var(--linha); font-size: 14px; }
+.mae-acumulado { font-weight: 700; font-size: 14px; margin-top: 4px; }
