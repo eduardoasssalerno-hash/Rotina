@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
-import { addDias, DIAS_CURTOS, fmtHora, hoje, isoDia } from '../lib/util.js'
-import { Botao, Field, Icone, Modal, Vazio } from '../components/ui.jsx'
+import { addDias, DIAS_CURTOS, fmtHora, hoje, inicioSemana, isoDia, MESES } from '../lib/util.js'
+import { Botao, Field, Icone, Modal, Segmentos, Vazio } from '../components/ui.jsx'
 import HabitosHoje from '../components/Habitos.jsx'
 import { Cabecalho } from './Shell.jsx'
 
@@ -10,22 +10,52 @@ const ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0]
 export default function Habitos() {
   const { d } = useDados()
   const [editando, setEditando] = useState(null)
+  const [visao, setVisao] = useState('semana') // 'semana' | 'mes'
+  const [desloca, setDesloca] = useState(0) // 0 = semana/mês atual, -1 = anterior...
   const lista = [...d.habitos].sort((a, b) => Number(b.ativo) - Number(a.ativo) || a.ordem - b.ordem)
-  const dias = Array.from({ length: 28 }, (_, i) => addDias(hoje(), i - 27))
+  const hj = hoje()
+  const isoHoje = isoDia(hj)
+  // dias do período escolhido
+  let ini, fim, titulo
+  if (visao === 'semana') {
+    ini = addDias(inicioSemana(hj), desloca * 7)
+    fim = addDias(ini, 6)
+    titulo = desloca === 0 ? 'Esta semana' : desloca === -1 ? 'Semana passada' : `${ini.getDate()}/${ini.getMonth() + 1} a ${fim.getDate()}/${fim.getMonth() + 1}`
+  } else {
+    ini = new Date(hj.getFullYear(), hj.getMonth() + desloca, 1)
+    fim = new Date(ini.getFullYear(), ini.getMonth() + 1, 0)
+    titulo = `${MESES[ini.getMonth()][0].toUpperCase()}${MESES[ini.getMonth()].slice(1)}${ini.getFullYear() !== hj.getFullYear() ? ` ${ini.getFullYear()}` : ''}`
+  }
+  const dias = []
+  for (let x = ini; x <= fim; x = addDias(x, 1)) dias.push(x)
+  // no mês, alinha o dia 1 na coluna do dia da semana (semana começa na segunda)
+  const vazios = visao === 'mes' ? (ini.getDay() + 6) % 7 : 0
+  const trocarVisao = (v) => { setVisao(v); setDesloca(0) }
 
   return (
     <div className="tela">
-      <Cabecalho titulo="Hábitos" sub="Toque para marcar hoje. As últimas 4 semanas aparecem embaixo de cada hábito.">
+      <Cabecalho titulo="Hábitos" sub="Toque para marcar hoje. Embaixo, veja cada hábito na semana ou no mês.">
         <button type="button" className="btn btn-primario" onClick={() => setEditando({})}><Icone nome="mais" tamanho={20} />Hábito</button>
       </Cabecalho>
       <HabitosHoje />
       <section className="cartao">
-        <div className="cab-cartao"><h2>Todos os hábitos</h2></div>
+        <div className="cab-cartao"><h2>Todos os hábitos</h2>
+          <Segmentos label="Ver por" value={visao} onChange={trocarVisao} options={[{ v: 'semana', label: 'Semana' }, { v: 'mes', label: 'Mês' }]} />
+        </div>
+        <div className="navegar navegar-habitos">
+          <button type="button" className="btn-icone" onClick={() => setDesloca((n) => n - 1)} aria-label={visao === 'semana' ? 'Semana anterior' : 'Mês anterior'}><Icone nome="voltar" /></button>
+          <strong>{titulo}</strong>
+          <button type="button" className="btn-icone" onClick={() => setDesloca((n) => Math.min(0, n + 1))} disabled={desloca === 0} aria-label={visao === 'semana' ? 'Próxima semana' : 'Próximo mês'}><Icone nome="avancar" /></button>
+          {desloca !== 0 && <button type="button" className="btn btn-sec btn-peq" onClick={() => setDesloca(0)}>Atual</button>}
+        </div>
         {lista.length === 0 && <Vazio>Nenhum hábito ainda.</Vazio>}
         {lista.map((h) => {
-          const feitos = new Set(d.habito_marcas.filter((m) => m.habito_id === h.id && m.valor >= h.meta).map((m) => m.dia))
-          const previstos = dias.filter((x) => h.dias.includes(x.getDay()))
-          const taxa = previstos.length ? Math.round((100 * previstos.filter((x) => feitos.has(isoDia(x))).length) / previstos.length) : 0
+          const marcas = new Map(d.habito_marcas.filter((m) => m.habito_id === h.id).map((m) => [m.dia, m.valor]))
+          const feito = (k) => (marcas.get(k) || 0) >= h.meta
+          // só conta até hoje (dias futuros ainda não aconteceram)
+          const previstos = dias.filter((x) => h.dias.includes(x.getDay()) && isoDia(x) <= isoHoje)
+          const nFeitos = previstos.filter((x) => feito(isoDia(x))).length
+          const taxa = previstos.length ? Math.round((100 * nFeitos) / previstos.length) : 0
           return (
             <div key={h.id} className={`habito-linha ${h.ativo ? '' : 'inativo'}`}>
               <div className="habito-linha-topo">
@@ -34,16 +64,27 @@ export default function Habitos() {
                   <span className="suave">
                     {' · '}{h.dias.length === 7 ? 'todo dia' : ORDEM_DIAS.filter((n) => h.dias.includes(n)).map((n) => DIAS_CURTOS[n]).join(', ')}
                     {h.horario ? ` · ${fmtHora(h.horario)}` : ''}{h.meta > 1 ? ` · ${h.meta} ${h.unidade || 'vezes'}` : ''}
-                    {h.ativo ? ` · ${taxa}% nas últimas 4 semanas` : ' · pausado'}
+                    {h.ativo ? ` · ${nFeitos} de ${previstos.length} (${taxa}%)` : ' · pausado'}
                   </span>
                 </div>
                 <button type="button" className="btn-icone" onClick={() => setEditando(h)} aria-label={`Editar ${h.nome}`}><Icone nome="editar" tamanho={18} /></button>
               </div>
-              <div className="mini-calor" aria-label={`${h.nome}: feito em ${feitos.size} dias`}>
+              <div className={`grade-habito ${visao}`} aria-label={`${h.nome}: feito em ${nFeitos} de ${previstos.length} dias`}>
+                {visao === 'semana' && dias.map((x) => <span key={`c${isoDia(x)}`} className="grade-habito-cab">{DIAS_CURTOS[x.getDay()]}</span>)}
+                {visao === 'mes' && ORDEM_DIAS.map((n) => <span key={`c${n}`} className="grade-habito-cab">{DIAS_CURTOS[n][0]}</span>)}
+                {Array.from({ length: vazios }, (_, i) => <span key={`v${i}`} />)}
                 {dias.map((x) => {
                   const k = isoDia(x)
                   const previsto = h.dias.includes(x.getDay())
-                  return <i key={k} className={feitos.has(k) ? 'n4' : previsto ? 'n0' : 'fora'} title={`${DIAS_CURTOS[x.getDay()]} ${x.getDate()}: ${feitos.has(k) ? 'feito' : previsto ? 'não feito' : 'não previsto'}`} />
+                  const futuro = k > isoHoje
+                  const valor = marcas.get(k) || 0
+                  const estado = feito(k) ? 'n4' : valor > 0 ? 'n2' : futuro ? 'futuro' : previsto ? 'n0' : 'fora'
+                  const txt = feito(k) ? 'feito' : valor > 0 ? `${valor} de ${h.meta}` : futuro ? 'ainda não chegou' : previsto ? 'não feito' : 'não previsto'
+                  return (
+                    <i key={k} className={`${estado} ${k === isoHoje ? 'hoje' : ''}`} title={`${DIAS_CURTOS[x.getDay()]} ${x.getDate()}: ${txt}`}>
+                      {visao === 'semana' ? (feito(k) ? <Icone nome="check" tamanho={14} /> : x.getDate()) : x.getDate()}
+                    </i>
+                  )
                 })}
               </div>
             </div>
