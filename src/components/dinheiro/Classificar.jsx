@@ -79,7 +79,7 @@ export default function Classificar({ lista, aoFechar }) {
             </button>
           ))}
           <button type="button" className={`chip ${mae ? 'ativo' : ''}`} aria-pressed={mae} onClick={() => { setMae(true); setTransf(false); setCat(null) }}>
-            Dinheiro da mãe
+            AP
           </button>
           <button type="button" className={`chip ${transf ? 'ativo' : ''}`} aria-pressed={transf} onClick={() => { setTransf(true); setMae(false); setCat(null) }}>
             Não conta (transferência, fatura, aplicação)

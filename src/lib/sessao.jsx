@@ -23,7 +23,7 @@ export function SessaoProvider({ children }) {
   const value = {
     session,
     user: session?.user ?? null,
-    nome: session?.user?.user_metadata?.nome || 'Ione',
+    nome: session?.user?.user_metadata?.nome || '',
     // conta criada com senha provisória: precisa criar a própria senha
     trocarSenha: session?.user?.user_metadata?.trocar_senha === true,
     recuperando,

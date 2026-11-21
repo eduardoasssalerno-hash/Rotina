@@ -96,7 +96,7 @@ export function NovaSenha({ primeiroAcesso = false }) {
   return (
     <main className="entrada">
       <Marca />
-      <h1>{primeiroAcesso ? `Bem-vinda, ${nome.split(' ')[0]}!` : 'Criar nova senha'}</h1>
+      <h1>{primeiroAcesso ? `Olá${nome ? `, ${nome.split(' ')[0]}` : ''}!` : 'Criar nova senha'}</h1>
       {primeiroAcesso && <p className="suave">Você entrou com uma senha provisória. Crie agora a sua senha para continuar.</p>}
       <form className="form" onSubmit={salvar}>
         <Field label="Nova senha" hint="Mínimo de 6 caracteres">

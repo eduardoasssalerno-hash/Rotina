@@ -48,7 +48,7 @@ export default function Hoje() {
 
   return (
     <div className="tela">
-      <Cabecalho titulo={`${saudacao(agora)}, ${nome.split(' ')[0]}`} sub={dataLonga(dia)}>
+      <Cabecalho titulo={nome ? `${saudacao(agora)}, ${nome.split(' ')[0]}` : saudacao(agora)} sub={dataLonga(dia)}>
         <button type="button" className="btn btn-primario" onClick={() => setEditando({})}><Icone nome="mais" tamanho={20} />Tarefa</button>
       </Cabecalho>
       {folga && <div className="info">Hoje é {folga.nome}: sem aula e sem estágio.</div>}

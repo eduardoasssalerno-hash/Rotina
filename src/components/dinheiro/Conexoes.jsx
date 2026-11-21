@@ -75,7 +75,7 @@ export default function Conexoes() {
           <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Categoria da regra">
             <option value="">Categoria…</option>
             {d.categorias.filter((c) => c.ativo).sort((a, b) => a.tipo.localeCompare(b.tipo) || a.ordem - b.ordem).map((c) => <option key={c.id} value={c.id}>{c.tipo === 'entrada' ? 'Entrada: ' : ''}{c.nome}</option>)}
-            <option value="mae">Dinheiro da mãe</option>
+            <option value="mae">AP</option>
             <option value="transferencia">Não conta (transferência)</option>
           </select>
           <Botao type="submit" disabled={texto.trim().length < 2 || !cat}>Pôr</Botao>
@@ -86,7 +86,7 @@ export default function Conexoes() {
             return (
               <li key={r.id}>
                 <code>{r.texto}</code>
-                <span>→ {r.grupo === 'mae' ? `dinheiro da mãe${Number(r.parte_minha) > 0 ? ` (R$ ${Number(r.parte_minha).toLocaleString('pt-BR')} seus)` : ''}` : r.transferencia ? 'não conta' : c?.nome || '?'}</span>
+                <span>→ {r.grupo === 'mae' ? `AP${Number(r.parte_minha) > 0 ? ` (R$ ${Number(r.parte_minha).toLocaleString('pt-BR')} seus)` : ''}` : r.transferencia ? 'não conta' : c?.nome || '?'}</span>
                 <button type="button" className="btn-icone btn-mini" aria-label={`Apagar regra ${r.texto}`} onClick={() => apagar('regras_categoria', r)}><Icone nome="lixo" tamanho={15} /></button>
               </li>
             )
