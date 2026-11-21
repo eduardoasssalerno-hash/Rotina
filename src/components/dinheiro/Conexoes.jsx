@@ -9,6 +9,7 @@ export default function Conexoes() {
   const { d, salvar, apagar } = useDados()
   const [banco, setBanco] = useState('Nubank')
   const [item, setItem] = useState('')
+  const [soInv, setSoInv] = useState(false)
   const [erro, setErro] = useState('')
   const [texto, setTexto] = useState('')
   const [cat, setCat] = useState('')
@@ -17,8 +18,8 @@ export default function Conexoes() {
   async function adicionar(e) {
     e.preventDefault()
     if (!valido) return setErro('O itemId tem 36 caracteres, assim: 1a2b3c4d-1234-5678-9abc-1234567890ab.')
-    const ok = await salvar('conexoes', { banco: banco.trim() || 'Banco', item_id: item.trim().toLowerCase() })
-    if (ok) { setItem(''); setErro('') }
+    const ok = await salvar('conexoes', { banco: banco.trim() || 'Banco', item_id: item.trim().toLowerCase(), so_investimentos: soInv })
+    if (ok) { setItem(''); setErro(''); setSoInv(false) }
   }
 
   async function novaRegra(e) {
@@ -40,7 +41,7 @@ export default function Conexoes() {
           {d.conexoes.map((c) => (
             <div key={c.id} className="conexao">
               <div className="conexao-textos">
-                <strong>{c.banco}</strong>
+                <strong>{c.banco}{c.so_investimentos ? ' · só investimentos' : ''}</strong>
                 <span className="suave">Atualizado: {quando(c.ultima_sincronia)}{c.consentimento_ate ? ` · autorização vale até ${new Date(c.consentimento_ate).toLocaleDateString('pt-BR')}` : ''}</span>
                 {c.erro && <span className="aviso-peq">Problema: {c.erro}</span>}
               </div>
@@ -52,6 +53,7 @@ export default function Conexoes() {
               <Field label="Banco"><input type="text" value={banco} maxLength={40} onChange={(e) => setBanco(e.target.value)} /></Field>
               <Field label="itemId (copiado do painel da Pluggy)"><input type="text" value={item} spellCheck={false} autoCapitalize="none" placeholder="1a2b3c4d-…" onChange={(e) => { setItem(e.target.value); setErro('') }} /></Field>
             </div>
+            <label className="check-simples"><input type="checkbox" checked={soInv} onChange={(e) => setSoInv(e.target.checked)} /> Só investimentos (as contas e os lançamentos já vêm por outra conexão)</label>
             {erro && <p className="erro">{erro}</p>}
             <Botao type="submit" disabled={!item.trim()}><Icone nome="mais" tamanho={18} />Ligar banco</Botao>
           </form>

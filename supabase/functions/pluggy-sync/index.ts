@@ -110,7 +110,8 @@ Deno.serve(async (req) => {
       try {
         const item = await pluggy(`/items/${c.item_id}`, apiKey)
         const banco = c.banco || item?.connector?.name || 'Banco'
-        const contas = (await pluggy(`/accounts?itemId=${c.item_id}`, apiKey)).results || []
+        // conexão "só investimentos": não traz contas nem lançamentos (já vêm pela outra conexão)
+        const contas = c.so_investimentos ? [] : (await pluggy(`/accounts?itemId=${c.item_id}`, apiKey)).results || []
         const desde = new Date(Date.now() - (c.ultima_sincronia ? 15 : 120) * 86400000).toISOString().slice(0, 10)
 
         for (const a of contas) {
@@ -157,7 +158,7 @@ Deno.serve(async (req) => {
         let avisoInv: string | null = null
         try { invs = (await pluggy(`/investments?itemId=${c.item_id}`, apiKey)).results || [] }
         catch (e) { invs = []; avisoInv = `Investimentos: ${String((e as Error)?.message || e).slice(0, 150)}` }
-        if (!avisoInv && invs.length === 0) {
+        if (!avisoInv && invs.length === 0 && c.so_investimentos) {
           // diagnóstico: o que o item diz sobre investimentos (produtos e status por produto)
           const prods = Array.isArray(item?.products) ? item.products.join(',') : '?'
           const det = item?.statusDetail?.investments
