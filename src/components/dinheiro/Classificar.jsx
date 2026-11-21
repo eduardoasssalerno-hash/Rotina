@@ -22,6 +22,7 @@ export default function Classificar({ lista, aoFechar }) {
   const l = lista[i]
   const [cat, setCat] = useState(null)
   const [transf, setTransf] = useState(false)
+  const [mae, setMae] = useState(false)
   const [regra, setRegra] = useState(true)
   const [texto, setTexto] = useState(() => (l ? sugestao(textoDe(l)) : ''))
   const [salvando, setSalvando] = useState(false)
@@ -34,21 +35,22 @@ export default function Classificar({ lista, aoFechar }) {
     setI(n)
     setCat(null)
     setTransf(false)
+    setMae(false)
     setTexto(sugestao(textoDe(lista[n])))
   }
 
   async function confirmar() {
-    if (!cat && !transf) return
+    if (!cat && !transf && !mae) return
     setSalvando(true)
-    const mudanca = transf ? { tipo: 'transferencia', categoria_id: null } : { categoria_id: cat }
+    const mudanca = mae ? { grupo: 'mae', categoria_id: null } : transf ? { tipo: 'transferencia', categoria_id: null } : { categoria_id: cat }
     await salvar('lancamentos', { id: l.id, ...mudanca })
     let aplicados = 0
     if (regra && texto.trim().length >= 2) {
-      const ok = await salvar('regras_categoria', { texto: texto.trim().toUpperCase().slice(0, 60), categoria_id: transf ? null : cat, transferencia: transf, ordem: 0 })
+      const ok = await salvar('regras_categoria', { texto: texto.trim().toUpperCase().slice(0, 60), categoria_id: transf || mae ? null : cat, transferencia: transf, grupo: mae ? 'mae' : null, ordem: 0 })
       if (ok) {
         // aplica a regra nos outros lançamentos parecidos que ainda estão sem categoria
         const alvo = normal(texto.trim())
-        const outros = d.lancamentos.filter((x) => x.id !== l.id && !x.categoria_id && x.tipo === l.tipo && normal(textoDe(x)).includes(alvo))
+        const outros = d.lancamentos.filter((x) => x.id !== l.id && !x.categoria_id && !x.grupo && x.tipo === l.tipo && normal(textoDe(x)).includes(alvo))
         for (const x of outros) { await salvar('lancamentos', { id: x.id, ...mudanca }); aplicados++ }
       }
     }
@@ -62,7 +64,7 @@ export default function Classificar({ lista, aoFechar }) {
       rodape={<>
         <button type="button" className="btn btn-sec" onClick={proximo}>Pular</button>
         <div className="espaco" />
-        <Botao carregando={salvando} disabled={!cat && !transf} onClick={confirmar}>Salvar e próximo</Botao>
+        <Botao carregando={salvando} disabled={!cat && !transf && !mae} onClick={confirmar}>Salvar e próximo</Botao>
       </>}>
       <div className="lanc-detalhe">
         <strong>{textoDe(l)}</strong>
@@ -72,11 +74,14 @@ export default function Classificar({ lista, aoFechar }) {
         <span className="campo-rotulo">Categoria</span>
         <div className="chips">
           {categorias.map((c) => (
-            <button key={c.id} type="button" className={`chip chip-cat ${cat === c.id ? 'ativo' : ''}`} aria-pressed={cat === c.id} onClick={() => { setCat(c.id); setTransf(false) }}>
+            <button key={c.id} type="button" className={`chip chip-cat ${cat === c.id ? 'ativo' : ''}`} aria-pressed={cat === c.id} onClick={() => { setCat(c.id); setTransf(false); setMae(false) }}>
               <i style={{ background: c.cor }} aria-hidden="true" />{c.nome}
             </button>
           ))}
-          <button type="button" className={`chip ${transf ? 'ativo' : ''}`} aria-pressed={transf} onClick={() => { setTransf(true); setCat(null) }}>
+          <button type="button" className={`chip ${mae ? 'ativo' : ''}`} aria-pressed={mae} onClick={() => { setMae(true); setTransf(false); setCat(null) }}>
+            Dinheiro da mãe
+          </button>
+          <button type="button" className={`chip ${transf ? 'ativo' : ''}`} aria-pressed={transf} onClick={() => { setTransf(true); setMae(false); setCat(null) }}>
             Não conta (transferência, fatura, aplicação)
           </button>
         </div>

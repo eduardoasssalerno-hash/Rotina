@@ -84,10 +84,12 @@ Deno.serve(async (req) => {
     const catPorNome = new Map((categorias || []).map((c: any) => [`${c.tipo}:${c.nome}`, c.id]))
     const catTipo = new Map((categorias || []).map((c: any) => [c.id, c.tipo]))
 
-    function classificar(texto: string, catBanco: string, tipo: 'gasto' | 'entrada') {
+    function classificar(texto: string, catBanco: string, tipo: 'gasto' | 'entrada'): { tipo: string; categoria_id: string | null; grupo?: string | null; parte_minha?: number | null } {
       const t = normal(texto)
       for (const r of regras || []) {
         if (!t.includes(normal(r.texto))) continue
+        // dinheiro da mãe: fora das finanças pessoais (do que entra, parte_minha é de quem usa o app)
+        if (r.grupo) return { tipo, categoria_id: null, grupo: r.grupo, parte_minha: tipo === 'entrada' && r.parte_minha ? Number(r.parte_minha) : null }
         if (r.transferencia) return { tipo: 'transferencia', categoria_id: null }
         if (catTipo.get(r.categoria_id) === tipo) return { tipo, categoria_id: r.categoria_id }
       }
@@ -134,6 +136,7 @@ Deno.serve(async (req) => {
             return {
               externo_id: String(t.id), conta_id: conta.id, origem: 'openfinance', dia: diaLocal(t.date), valor,
               tipo: cl.tipo, categoria_id: cl.categoria_id,
+              grupo: cl.grupo ?? null, parte_minha: cl.parte_minha != null ? Math.min(cl.parte_minha, valor) : null,
               descricao: String(t.description || texto || banco).slice(0, 200),
               texto_banco: texto.slice(0, 300) || null,
               categoria_banco: t.category ? String(t.category).slice(0, 120) : null,
