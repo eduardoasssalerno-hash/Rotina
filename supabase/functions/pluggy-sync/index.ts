@@ -154,7 +154,15 @@ Deno.serve(async (req) => {
 
         // investimentos (posição atual + saldo do dia para o gráfico)
         let invs: any[] = []
-        try { invs = (await pluggy(`/investments?itemId=${c.item_id}`, apiKey)).results || [] } catch { invs = [] }
+        let avisoInv: string | null = null
+        try { invs = (await pluggy(`/investments?itemId=${c.item_id}`, apiKey)).results || [] }
+        catch (e) { invs = []; avisoInv = `Investimentos: ${String((e as Error)?.message || e).slice(0, 150)}` }
+        if (!avisoInv && invs.length === 0) {
+          // diagnóstico: o que o item diz sobre investimentos (produtos e status por produto)
+          const prods = Array.isArray(item?.products) ? item.products.join(',') : '?'
+          const det = item?.statusDetail?.investments
+          avisoInv = `Investimentos: 0 · conector=${item?.connector?.name || '?'} · produtos=${prods} · status=${det ? JSON.stringify(det).slice(0, 120) : 'sem detalhe'}`
+        }
         for (const v of invs) {
           const taxa = v.rate != null ? `${v.rate}${v.rateType ? ` ${v.rateType}` : ''}` : v.annualRate != null ? `${v.annualRate}% a.a.` : null
           const { data: inv, error } = await sb.from('investimentos').upsert({
@@ -171,7 +179,7 @@ Deno.serve(async (req) => {
         }
 
         await sb.from('conexoes').update({
-          status: item?.status || 'UPDATED', erro: null, ultima_sincronia: agora,
+          status: item?.status || 'UPDATED', erro: avisoInv, ultima_sincronia: agora,
           consentimento_ate: item?.consentExpiresAt || null,
         }).eq('id', c.id)
       } catch (e) {
