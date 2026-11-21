@@ -51,7 +51,9 @@ export default function Dinheiro() {
   const [classificando, setClassificando] = useState(null)
   const { rodando, sincronizar } = useSincronia()
   const k = chaveMes(mes)
-  const doMes = d.lancamentos.filter((l) => l.dia.startsWith(k)).sort((a, b) => b.dia.localeCompare(a.dia) || String(b.criado_em).localeCompare(String(a.criado_em)))
+  // rendimentos da conta remunerada ficam na aba Investimentos, não no mês
+  const idRend = new Set(d.categorias.filter((c) => c.nome === 'Rendimentos').map((c) => c.id))
+  const doMes = d.lancamentos.filter((l) => l.dia.startsWith(k) && !idRend.has(l.categoria_id)).sort((a, b) => b.dia.localeCompare(a.dia) || String(b.criado_em).localeCompare(String(a.criado_em)))
   // dinheiro da mãe fica fora; do pró-labore dela, só a parte que é sua entra nas suas entradas
   const contam = doMes.filter((l) => l.tipo !== 'transferencia' && !l.grupo)
   const parteMinha = doMes.filter((l) => l.grupo && l.tipo === 'entrada').reduce((s, l) => s + Number(l.parte_minha || 0), 0)

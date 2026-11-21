@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useDados } from '../../lib/dados.jsx'
-import { dataCurta, deIso, reais } from '../../lib/util.js'
+import { dataCurta, deIso, hoje, pad, reais } from '../../lib/util.js'
 import { Vazio } from '../ui.jsx'
 
 export const TIPOS_INV = {
@@ -12,7 +12,8 @@ const pct = (v) => `${v >= 0 ? '+' : ''}${(v * 100).toLocaleString('pt-BR', { ma
 
 export default function Investimentos() {
   const { d } = useDados()
-  const ativos = d.investimentos.filter((i) => i.ativo)
+  // posições zeradas (CDB já resgatado) não aparecem
+  const ativos = d.investimentos.filter((i) => i.ativo && Number(i.saldo) > 0)
   const total = ativos.reduce((s, i) => s + Number(i.saldo || 0), 0)
   const aplicado = ativos.reduce((s, i) => s + Number(i.aplicado ?? i.saldo ?? 0), 0)
   const ganho = total - aplicado
@@ -35,6 +36,7 @@ export default function Investimentos() {
         <div className="cartao"><span className="suave">Rendeu</span><strong className={ganho < 0 ? 'valor-negativo' : 'valor-entrada'}>{reais(ganho)}{aplicado > 0 ? ` (${pct(ganho / aplicado)})` : ''}</strong></div>
       </div>
       <Evolucao />
+      <Rendimentos />
       <div className="grade-hoje">
         {lista.map((g) => (
           <section key={g.nome} className="cartao">
@@ -97,6 +99,34 @@ function Evolucao() {
         <line x1={x(ativo)} x2={x(ativo)} y1={P} y2={H - P} stroke="var(--borda-forte)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="escala"><span>{dataCurta(deIso(pontos[0][0]))}</span><span>{dataCurta(deIso(pontos[pontos.length - 1][0]))}</span></div>
+    </section>
+  )
+}
+
+// Rendimentos que caem na conta (ex.: conta remunerada do BTG): ficam aqui, fora das entradas do mês
+function Rendimentos() {
+  const { d } = useDados()
+  const ids = new Set(d.categorias.filter((c) => c.nome === 'Rendimentos').map((c) => c.id))
+  const lista = d.lancamentos.filter((l) => ids.has(l.categoria_id)).sort((a, b) => b.dia.localeCompare(a.dia))
+  if (!lista.length) return null
+  const k = `${hoje().getFullYear()}-${pad(hoje().getMonth() + 1)}`
+  const doMes = lista.filter((l) => l.dia.startsWith(k)).reduce((s, l) => s + Number(l.valor), 0)
+  const total = lista.reduce((s, l) => s + Number(l.valor), 0)
+  return (
+    <section className="cartao">
+      <div className="cab-cartao"><h2>Rendimentos da conta</h2><span className="suave">este mês {reais(doMes)} · desde o início {reais(total)}</span></div>
+      <ul className="itens-mae">
+        {lista.slice(0, 8).map((l) => {
+          const conta = d.contas.find((c) => c.id === l.conta_id)
+          return (
+            <li key={l.id}>
+              <span className="suave">{dataCurta(deIso(l.dia))}</span>
+              <span>{conta?.nome || 'Conta'}</span>
+              <strong className="valor-entrada">+ {reais(l.valor)}</strong>
+            </li>
+          )
+        })}
+      </ul>
     </section>
   )
 }
