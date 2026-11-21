@@ -3,6 +3,7 @@ import { useDados } from '../lib/dados.jsx'
 import { duracao, fmtHora, hoje, isoDia, pad } from '../lib/util.js'
 import { Botao, Icone, Segmentos, Vazio, useToast } from '../components/ui.jsx'
 import { Cabecalho } from './Shell.jsx'
+import { marcadorDe } from '../lib/foco.js'
 
 const CHAVE = '3s-rotina-foco'
 const DURACOES = [25, 50, 90]
@@ -100,7 +101,9 @@ export default function Foco() {
     trava.current?.release?.().catch(() => {})
     if (min >= 1) {
       const t = d.tarefas.find((x) => x.id === f.tarefa_id)
-      const ok = await salvar('sessoes_foco', { tarefa_id: f.tarefa_id || null, projeto_id: t?.projeto_id || null, minutos: min, inicio: new Date(f.inicio).toISOString() })
+      // guarda o nome da matéria: mesmo que o planeta seja apagado depois, a estatística continua certa
+      const m = marcadorDe(d, { tarefa_id: f.tarefa_id, projeto_id: t?.projeto_id })
+      const ok = await salvar('sessoes_foco', { tarefa_id: f.tarefa_id || null, projeto_id: t?.projeto_id || null, minutos: min, inicio: new Date(f.inicio).toISOString(), marcador: m === 'Foco livre' ? null : m.slice(0, 60) })
       if (ok) toast(aviso || `${duracao(min)} de foco registrados${t?.projeto_id ? '. O planeta ganhou energia!' : ''}`)
     } else {
       toast('Menos de 1 minuto: não foi registrado.')

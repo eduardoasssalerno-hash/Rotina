@@ -6,7 +6,9 @@ import { addDias, hoje, isoDia, msgErro } from './util.js'
 const TABELAS = ['areas', 'projetos', 'tarefas', 'blocos_fixos', 'blocos_feitos', 'folgas',
   'habitos', 'habito_marcas', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco', 'anexos', 'metas', 'categorias', 'lancamentos', 'conexoes', 'contas', 'regras_categoria', 'investimentos', 'investimento_historico', 'ajustes']
 // Tabelas com muitas linhas: só o último ano
-const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', sessoes_foco: 'inicio', lancamentos: 'dia', investimento_historico: 'dia' }
+// sessoes_foco vem inteira: a aba Planetas mostra os anos anteriores (inclusive o histórico do Forest)
+const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', lancamentos: 'dia', investimento_historico: 'dia' }
+const PAGINA = 1000 // o Supabase entrega no máximo 1000 linhas por vez
 // Tabelas sem coluna id: a linha é identificada por estas colunas
 const CHAVES = { blocos_feitos: ['bloco_id', 'dia'], habito_marcas: ['habito_id', 'dia'], investimento_historico: ['investimento_id', 'dia'], ajustes: ['user_id'] }
 
@@ -25,10 +27,19 @@ export function DadosProvider({ children, aoErro }) {
     setErro('')
     try {
       const desde = isoDia(addDias(hoje(), -400))
-      const res = await Promise.all(TABELAS.map((t) => {
-        let q = supabase.from(t).select('*')
-        if (COM_DIA[t]) q = q.gte(COM_DIA[t], desde)
-        return q
+      const res = await Promise.all(TABELAS.map(async (t) => {
+        const linhas = []
+        for (let de = 0; ; de += PAGINA) {
+          let q = supabase.from(t).select('*')
+          if (COM_DIA[t]) q = q.gte(COM_DIA[t], desde)
+          // ordem fixa para as páginas não se repetirem
+          for (const k of CHAVES[t] || ['id']) q = q.order(k)
+          const { data, error } = await q.range(de, de + PAGINA - 1)
+          if (error) return { data: null, error }
+          linhas.push(...(data || []))
+          if (!data || data.length < PAGINA) break
+        }
+        return { data: linhas, error: null }
       }))
       const novo = {}
       res.forEach(({ data, error }, i) => {

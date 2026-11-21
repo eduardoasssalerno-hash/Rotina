@@ -664,3 +664,34 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .grade-habito .dia-habito:disabled { cursor: default; }
 .grade-habito .dia-habito.n0 { background: var(--neutro); }
 .grade-habito .dia-habito.n4 { background: var(--acento); }
+
+/* ---------- Planetas: galáxia do período ---------- */
+:root {
+  --serie-1: #2a78d6; --serie-2: #eb6834; --serie-3: #1baf7a; --serie-4: #eda100;
+  --serie-5: #e87ba4; --serie-6: #008300; --serie-7: #6250d6; --serie-8: #e34948; --serie-outros: #8A96A3;
+}
+[data-tema='escuro'] {
+  --serie-1: #3987e5; --serie-2: #d95926; --serie-3: #199e70; --serie-4: #c98500;
+  --serie-5: #d55181; --serie-6: #0ca30c; --serie-7: #9085e9; --serie-8: #e66767; --serie-outros: #6B7785;
+}
+.universo-cartao { gap: 10px; }
+.universo-cartao > .segmentos { align-self: center; }
+.navegar-universo { justify-content: center; }
+.navegar-universo strong { min-width: 170px; font-size: 17px; }
+.universo { position: relative; width: 100%; max-width: 860px; margin: 0 auto; border-radius: 16px; overflow: hidden; background: #050B17; }
+.universo svg { display: block; width: 100%; height: auto; }
+.universo-rotulo { fill: #E6EEF6; font-size: 10px; font-weight: 700; font-family: var(--fonte); paint-order: stroke; stroke: rgba(5, 11, 23, 0.85); stroke-width: 2.5px; }
+.universo-contas { position: absolute; right: 10px; bottom: 8px; display: flex; gap: 12px; color: #E6EEF6; font-weight: 700; font-size: 13.5px; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8); font-variant-numeric: tabular-nums; }
+.universo .pisca { animation: pisca 4s ease-in-out infinite; }
+@keyframes pisca { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .universo .pisca { animation: none; } }
+.total-foco { margin: 0 0 8px; color: var(--suave); }
+.total-foco strong { color: var(--tinta); font-family: var(--titulo); font-size: 20px; }
+.barras-foco { height: 140px; }
+.linha-horas { width: 100%; height: auto; display: block; }
+.linha-horas .grade-linha { stroke: var(--linha); stroke-width: 1; }
+.linha-horas .traco-linha { stroke: var(--acento); }
+.linha-horas .ponto-linha { fill: var(--superficie); stroke: var(--acento); }
+.linha-horas .eixo-texto { fill: var(--suave); font-size: 9px; font-family: var(--fonte); }
+.legenda-materias li span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ver-mais { align-self: center; }
