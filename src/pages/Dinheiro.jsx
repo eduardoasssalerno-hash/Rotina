@@ -60,9 +60,12 @@ export default function Dinheiro() {
   // dinheiro da mãe fica fora; do pró-labore dela, só a parte que é sua entra nas suas entradas
   const contam = doMes.filter((l) => l.tipo !== 'transferencia' && !l.grupo)
   const parteMinha = doMes.filter((l) => l.grupo && l.tipo === 'entrada').reduce((s, l) => s + Number(l.parte_minha || 0), 0)
-  const entradas = contam.filter((l) => l.tipo === 'entrada').reduce((s, l) => s + Number(l.valor), 0) + parteMinha
+  // reembolsos não são entrada: descontam do total de gastos
+  const idReemb = new Set(d.categorias.filter((c) => c.nome === 'Reembolsos').map((c) => c.id))
+  const reembolsos = contam.filter((l) => l.tipo === 'entrada' && idReemb.has(l.categoria_id)).reduce((s, l) => s + Number(l.valor), 0)
+  const entradas = contam.filter((l) => l.tipo === 'entrada' && !idReemb.has(l.categoria_id)).reduce((s, l) => s + Number(l.valor), 0) + parteMinha
   const maeMes = resumoMae(doMes, d.ajustes[0]?.ap_desde || null)[0]
-  const gastos = contam.filter((l) => l.tipo === 'gasto').reduce((s, l) => s + Number(l.valor), 0)
+  const gastos = Math.max(0, contam.filter((l) => l.tipo === 'gasto').reduce((s, l) => s + Number(l.valor), 0) - reembolsos)
   const saldo = entradas - gastos
   const titulo = `${MESES[mes.getMonth()][0].toUpperCase()}${MESES[mes.getMonth()].slice(1)} de ${mes.getFullYear()}`
   const semCategoria = d.lancamentos.filter((l) => l.tipo !== 'transferencia' && !l.grupo && !l.categoria_id && l.origem !== 'manual').sort((a, b) => b.dia.localeCompare(a.dia))

@@ -7,7 +7,11 @@ export const TIPOS_INV = {
   FIXED_INCOME: 'Renda fixa', MUTUAL_FUND: 'Fundos', EQUITY: 'Ações', ETF: 'ETFs', SECURITY: 'Previdência e títulos',
   COE: 'COE', OTHER: 'Outros', outro: 'Outros',
 }
+const SUBTIPOS = { TREASURY: 'Tesouro', CDB: 'CDB', LCI: 'LCI', LCA: 'LCA', LC: 'LC', CRI: 'CRI', CRA: 'CRA', DEBENTURES: 'Debênture' }
+// Tesouro Direto vira um grupo próprio (Pluggy manda como renda fixa, subtipo TREASURY)
+const ehTesouro = (i) => i.subtipo === 'TREASURY' || /tesouro/i.test(i.nome || '')
 const nomeTipo = (t) => TIPOS_INV[t] || t
+const grupoDe = (i) => (ehTesouro(i) ? 'Tesouro Direto' : nomeTipo(i.tipo))
 const pct = (v) => `${v >= 0 ? '+' : ''}${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 
 export default function Investimentos() {
@@ -19,7 +23,7 @@ export default function Investimentos() {
   const ganho = total - aplicado
   const grupos = new Map()
   for (const i of ativos) {
-    const k = nomeTipo(i.tipo)
+    const k = grupoDe(i)
     grupos.set(k, [...(grupos.get(k) || []), i])
   }
   const lista = [...grupos.entries()].map(([nome, itens]) => ({ nome, itens, soma: itens.reduce((s, i) => s + Number(i.saldo || 0), 0) })).sort((a, b) => b.soma - a.soma)
@@ -48,7 +52,7 @@ export default function Investimentos() {
                 <div key={i.id} className="investimento">
                   <div className="investimento-textos">
                     <strong>{i.nome}</strong>
-                    <span className="suave">{[i.instituicao, i.subtipo, i.taxa, i.vencimento ? `vence ${deIso(i.vencimento).toLocaleDateString('pt-BR')}` : null].filter(Boolean).join(' · ')}</span>
+                    <span className="suave">{[i.instituicao, SUBTIPOS[i.subtipo] || i.subtipo, i.taxa, i.vencimento ? `vence ${deIso(i.vencimento).toLocaleDateString('pt-BR')}` : null].filter(Boolean).join(' · ')}</span>
                   </div>
                   <div className="investimento-valores">
                     <strong>{reais(i.saldo)}</strong>
