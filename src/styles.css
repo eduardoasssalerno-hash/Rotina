@@ -640,3 +640,10 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .dia-escolher strong { font-family: var(--titulo); font-size: 18px; font-weight: 600; }
 .dia-escolher input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 .btn-icone:disabled { opacity: .35; cursor: default; }
+
+/* Disco do modo foco: arrastar em volta do círculo */
+.disco svg { touch-action: none; cursor: grab; border-radius: 50%; }
+.disco.girando svg { cursor: grabbing; }
+.disco .relogio-textos { pointer-events: none; }
+.disco .disco-arco { transition: none; }
+.dica-disco { text-align: center; max-width: 360px; margin: -4px 0 0; font-size: 13.5px; }

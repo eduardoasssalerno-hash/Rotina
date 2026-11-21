@@ -70,7 +70,6 @@ export default function Foco() {
   const [foco, setFoco] = useState(lerFoco)
   const [, setTique] = useState(0)
   const [minutos, setMinutos] = useState(foco?.duracao || 25)
-  const [outro, setOutro] = useState(() => (foco?.duracao && !DURACOES.includes(foco.duracao) ? String(foco.duracao) : ''))
   const [lofi, setLofiEstado] = useState(lerLofi)
   const [trocando, setTrocando] = useState(false)
   const player = useRef(null)
@@ -87,7 +86,7 @@ export default function Foco() {
   const tarefa = d.tarefas.find((t) => t.id === (foco?.tarefa_id ?? tarefaId))
   const projeto = tarefa?.projeto_id ? d.projetos.find((p) => p.id === tarefa.projeto_id) : null
 
-  const total = (foco?.duracao || (outro ? Math.max(1, Math.min(240, Math.round(Number(outro) || 0))) || 1 : minutos)) * 60
+  const total = (foco?.duracao || minutos) * 60
   const seg = decorrido(foco)
   const resta = Math.max(0, total - seg)
   const rodando = foco && !foco.pausadoEm
@@ -129,7 +128,7 @@ export default function Foco() {
     return () => { trava.current?.release?.().catch(() => {}); trava.current = null }
   }, [rodando])
 
-  const minutosEscolhidos = outro ? Math.max(1, Math.min(240, Math.round(Number(outro) || 0))) : minutos
+  const minutosEscolhidos = minutos
   function comecar() {
     if (!minutosEscolhidos) return
     const f = { inicio: Date.now(), pausas: 0, pausadoEm: null, duracao: minutosEscolhidos, tarefa_id: tarefaId || null }
@@ -163,28 +162,28 @@ export default function Foco() {
       <Cabecalho titulo="Modo foco" sub="Cada 25 minutos de foco numa etapa dá +15 de energia ao planeta" />
       <div className="grade-hoje">
         <section className="cartao foco">
-          <div className="relogio-foco" role="timer" aria-live="off" aria-label={`Faltam ${Math.floor(resta / 60)} minutos`}>
-            <svg viewBox="0 0 100 100" aria-hidden="true">
-              <circle cx="50" cy="50" r={R} fill="none" stroke="var(--neutro)" strokeWidth="5" />
-              <circle cx="50" cy="50" r={R} fill="none" stroke="var(--acento)" strokeWidth="5" strokeLinecap="round"
-                strokeDasharray={`${C * (1 - resta / total)} ${C}`} transform="rotate(-90 50 50)" />
-            </svg>
-            <div className="relogio-textos">
-              <strong>{pad(Math.floor(resta / 60))}:{pad(resta % 60)}</strong>
-              <span className="suave">{foco ? (foco.pausadoEm ? 'pausado' : 'focando') : `${minutosEscolhidos || '—'} minutos`}</span>
+          {foco ? (
+            <div className="relogio-foco" role="timer" aria-live="off" aria-label={`Faltam ${Math.floor(resta / 60)} minutos`}>
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r={R} fill="none" stroke="var(--neutro)" strokeWidth="5" />
+                <circle cx="50" cy="50" r={R} fill="none" stroke="var(--acento)" strokeWidth="5" strokeLinecap="round"
+                  strokeDasharray={`${C * (1 - resta / total)} ${C}`} transform="rotate(-90 50 50)" />
+              </svg>
+              <div className="relogio-textos">
+                <strong>{pad(Math.floor(resta / 60))}:{pad(resta % 60)}</strong>
+                <span className="suave">{foco.pausadoEm ? 'pausado' : 'focando'}</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <Disco minutos={minutos} aoMudar={setMinutos} />
+          )}
 
           {!foco ? (
             <>
               <div className="duracoes">
-                <Segmentos label="Duração" value={outro ? null : minutos} onChange={(v) => { setMinutos(v); setOutro('') }} options={DURACOES.map((m) => ({ v: m, label: `${m} min` }))} />
-                <label className="outro-tempo">
-                  <span>ou</span>
-                  <input type="number" inputMode="numeric" min={1} max={240} value={outro} placeholder="outro" aria-label="Outro tempo, em minutos" onChange={(e) => setOutro(e.target.value.replace(/\D/g, '').slice(0, 3))} />
-                  <span>min</span>
-                </label>
+                <Segmentos label="Duração" value={DURACOES.includes(minutos) ? minutos : null} onChange={setMinutos} options={DURACOES.map((m) => ({ v: m, label: `${m} min` }))} />
               </div>
+              <p className="suave dica-disco">Gire o círculo para ajustar o tempo: cada volta são 60 minutos (até 4 horas).</p>
               <label className="campo foco-tarefa">
                 <span className="campo-rotulo">No que você vai focar?</span>
                 <select value={tarefaId} onChange={(e) => setTarefaId(e.target.value)}>
@@ -242,6 +241,75 @@ export default function Foco() {
             })}
           </ul>
         </section>
+      </div>
+    </div>
+  )
+}
+
+// Disco para escolher o tempo: arrastar em volta do círculo vai somando os minutos.
+// Uma volta = 60 minutos; dá para dar várias voltas (até 240). Setas do teclado também funcionam.
+const MIN_DISCO = 1
+const MAX_DISCO = 240
+function Disco({ minutos, aoMudar }) {
+  const ref = useRef(null)
+  const giro = useRef(null) // { ang, graus }
+  const [arrastando, setArrastando] = useState(false)
+  const R = 44
+  const C = 2 * Math.PI * R
+  const limitar = (m) => Math.max(MIN_DISCO, Math.min(MAX_DISCO, Math.round(m)))
+
+  function angulo(e) {
+    const r = ref.current.getBoundingClientRect()
+    const x = e.clientX - (r.left + r.width / 2)
+    const y = e.clientY - (r.top + r.height / 2)
+    return ((Math.atan2(x, -y) * 180) / Math.PI + 360) % 360 // 0° no topo, sentido horário
+  }
+  function inicio(e) {
+    e.preventDefault()
+    ref.current.setPointerCapture?.(e.pointerId)
+    giro.current = { ang: angulo(e), graus: minutos * 6 }
+    setArrastando(true)
+  }
+  function move(e) {
+    if (!giro.current) return
+    const a = angulo(e)
+    let delta = a - giro.current.ang
+    if (delta > 180) delta -= 360
+    if (delta < -180) delta += 360
+    giro.current.ang = a
+    giro.current.graus = Math.max(MIN_DISCO * 6, Math.min(MAX_DISCO * 6, giro.current.graus + delta))
+    const m = limitar(giro.current.graus / 6)
+    if (m !== minutos) { aoMudar(m); navigator.vibrate?.(4) }
+  }
+  function fim() { giro.current = null; setArrastando(false) }
+  function teclas(e) {
+    const passo = e.shiftKey ? 5 : 1
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); aoMudar(limitar(minutos + passo)) }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); aoMudar(limitar(minutos - passo)) }
+  }
+
+  const voltas = Math.floor((minutos - 1) / 60)
+  const frac = (((minutos - 1) % 60) + 1) / 60
+  const ang = frac * 2 * Math.PI
+  const px = 50 + R * Math.sin(ang)
+  const py = 50 - R * Math.cos(ang)
+  return (
+    <div className={`relogio-foco disco ${arrastando ? 'girando' : ''}`}>
+      <svg ref={ref} viewBox="0 0 100 100" role="slider" tabIndex={0} aria-label="Tempo de foco, em minutos"
+        aria-valuemin={MIN_DISCO} aria-valuemax={MAX_DISCO} aria-valuenow={minutos} aria-valuetext={duracao(minutos)}
+        onPointerDown={inicio} onPointerMove={move} onPointerUp={fim} onPointerCancel={fim} onKeyDown={teclas}>
+        <circle cx="50" cy="50" r={R} fill="none" stroke={voltas > 0 ? 'var(--acento)' : 'var(--neutro)'} strokeOpacity={voltas > 0 ? 0.35 : 1} strokeWidth="7" />
+        {[...Array(12)].map((_, i) => {
+          const a = (i * Math.PI) / 6
+          return <line key={i} x1={50 + 36 * Math.sin(a)} y1={50 - 36 * Math.cos(a)} x2={50 + 38.5 * Math.sin(a)} y2={50 - 38.5 * Math.cos(a)} stroke="var(--borda-forte)" strokeWidth="0.8" strokeLinecap="round" />
+        })}
+        <circle className="disco-arco" cx="50" cy="50" r={R} fill="none" stroke="var(--acento)" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={`${C * frac} ${C}`} transform="rotate(-90 50 50)" />
+        <circle cx={px} cy={py} r="5.5" fill="var(--superficie)" stroke="var(--acento)" strokeWidth="2.5" />
+      </svg>
+      <div className="relogio-textos">
+        <strong>{pad(Math.floor(minutos / 60))}:{pad(minutos % 60)}</strong>
+        <span className="suave">{duracao(minutos)}{minutos > 60 ? ` · ${Math.ceil(minutos / 60)}ª volta` : ''}</span>
       </div>
     </div>
   )
