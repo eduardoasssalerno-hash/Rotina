@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
 import { supabase } from '../lib/supabase.js'
+import { ocultarValores, valoresOcultos } from '../lib/privacidade.js'
 import Classificar from '../components/dinheiro/Classificar.jsx'
 import Investimentos from '../components/dinheiro/Investimentos.jsx'
 import Conexoes from '../components/dinheiro/Conexoes.jsx'
@@ -50,6 +51,8 @@ export default function Dinheiro() {
   const [editando, setEditando] = useState(null) // lançamento, ou { tipo } para novo
   const [classificando, setClassificando] = useState(null)
   const { rodando, sincronizar } = useSincronia()
+  const [oculto, setOculto] = useState(valoresOcultos)
+  const alternarOlho = () => { ocultarValores(!oculto); setOculto(!oculto) }
   const k = chaveMes(mes)
   // rendimentos da conta remunerada ficam na aba Investimentos, não no mês
   const idRend = new Set(d.categorias.filter((c) => c.nome === 'Rendimentos').map((c) => c.id))
@@ -68,6 +71,7 @@ export default function Dinheiro() {
   const cabecalho = (
     <>
       <Cabecalho titulo="Dinheiro" sub="Gastos, entradas e investimentos">
+        <button type="button" className="btn-icone" onClick={alternarOlho} aria-pressed={oculto} aria-label={oculto ? 'Mostrar os valores' : 'Esconder os valores'} title={oculto ? 'Mostrar os valores' : 'Esconder os valores'}><Icone nome={oculto ? 'olhoFechado' : 'olho'} /></button>
         <button type="button" className="btn btn-sec" onClick={() => setEditando({ tipo: 'entrada' })}><Icone nome="mais" tamanho={20} />Entrada</button>
         <button type="button" className="btn btn-primario" onClick={() => setEditando({ tipo: 'gasto' })}><Icone nome="mais" tamanho={20} />Gasto</button>
       </Cabecalho>
@@ -103,7 +107,6 @@ export default function Dinheiro() {
     porCat.set(nome, atual)
   }
   const cats = [...porCat.entries()].map(([nome, x]) => ({ nome, ...x })).sort((a, b) => b.v - a.v)
-  const maxCat = Math.max(1, ...cats.map((c) => c.v))
 
   // agrupa a lista por dia
   const grupos = []
@@ -169,15 +172,7 @@ export default function Dinheiro() {
         <section className="cartao">
           <div className="cab-cartao"><h2>Gastos por categoria</h2></div>
           {cats.length === 0 && <Vazio>Sem gastos neste mês.</Vazio>}
-          <ul className="cats">
-            {cats.map((c) => (
-              <li key={c.nome}>
-                <div className="cats-topo"><span><i style={{ background: c.cor }} aria-hidden="true" />{c.nome}</span><strong>{reais(c.v)}</strong></div>
-                <div className="barra" aria-hidden="true"><div style={{ width: `${(c.v / maxCat) * 100}%`, background: c.cor }} /></div>
-                <span className="suave">{Math.round((100 * c.v) / gastos)}% dos gastos</span>
-              </li>
-            ))}
-          </ul>
+          {cats.length > 0 && <Pizza cats={cats} total={gastos} />}
         </section>
       </div>
       {modais}
@@ -253,5 +248,39 @@ function EditorLancamento({ lanc, tipoInicial, aoFechar }) {
         {erro && <p className="erro">{erro}</p>}
       </form>
     </Modal>
+  )
+}
+
+// Pizza (rosca) dos gastos por categoria, com a lista ao lado
+function Pizza({ cats, total }) {
+  const R = 42
+  const C = 2 * Math.PI * R
+  let acum = 0
+  const fatias = cats.slice(0, 8)
+  if (cats.length > 8) fatias.push({ nome: 'Outras', cor: '#8A96A3', v: cats.slice(8).reduce((s, c) => s + c.v, 0) })
+  return (
+    <div className="pizza">
+      <svg viewBox="0 0 120 120" width="170" height="170" role="img" aria-label={`Gastos por categoria: ${fatias.map((f) => `${f.nome} ${Math.round((100 * f.v) / total)}%`).join(', ')}`}>
+        <circle cx="60" cy="60" r={R} fill="none" stroke="var(--neutro)" strokeWidth="22" />
+        {fatias.map((f) => {
+          const parte = (f.v / total) * C
+          const el = (
+            <circle key={f.nome} cx="60" cy="60" r={R} fill="none" stroke={f.cor} strokeWidth="22"
+              strokeDasharray={`${Math.max(0, parte - (fatias.length > 1 ? 1.2 : 0))} ${C}`} strokeDashoffset={-acum} transform="rotate(-90 60 60)">
+              <title>{`${f.nome}: ${reais(f.v)} (${Math.round((100 * f.v) / total)}%)`}</title>
+            </circle>
+          )
+          acum += parte
+          return el
+        })}
+        <text x="60" y="57" textAnchor="middle" fontSize="9" fill="var(--suave)">gastos</text>
+        <text x="60" y="71" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--tinta)">{reais(total)}</text>
+      </svg>
+      <ul className="pizza-legenda">
+        {fatias.map((f) => (
+          <li key={f.nome}><i style={{ background: f.cor }} /><span>{f.nome}</span><strong>{reais(f.v)}</strong><span className="suave">{Math.round((100 * f.v) / total)}%</span></li>
+        ))}
+      </ul>
+    </div>
   )
 }

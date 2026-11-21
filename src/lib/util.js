@@ -1,3 +1,4 @@
+import { valoresOcultos } from './privacidade.js'
 // Datas, horas e textos usados no app inteiro (sempre no horário local)
 
 export const pad = (n) => String(n).padStart(2, '0')
@@ -74,9 +75,9 @@ export function msgErro(e) {
   return m || 'Algo deu errado. Tente de novo.'
 }
 
-// R$ 1.234,56
+// R$ 1.234,56 (ou R$ ••••• quando o olhinho está fechado)
 const fmtReal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-export const reais = (v) => fmtReal.format(Number(v) || 0)
+export const reais = (v) => (valoresOcultos() ? 'R$ •••••' : fmtReal.format(Number(v) || 0))
 // "1.234,56" ou "12,5" -> 1234.56
 export function lerValor(txt) {
   const limpo = String(txt || '').replace(/[^\d,.-]/g, '')
