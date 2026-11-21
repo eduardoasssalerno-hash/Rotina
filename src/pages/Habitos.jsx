@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
 import { addDias, DIAS_CURTOS, fmtHora, hoje, inicioSemana, isoDia, MESES } from '../lib/util.js'
 import { Botao, Field, Icone, Modal, Segmentos, Vazio } from '../components/ui.jsx'
-import HabitosHoje from '../components/Habitos.jsx'
+import HabitosHoje, { Leitura } from '../components/Habitos.jsx'
 import { Cabecalho } from './Shell.jsx'
 
 const ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0]
 
 export default function Habitos() {
-  const { d, gravar, apagar } = useDados()
+  const { d, gravar, apagar, salvar } = useDados()
+  const [lendo, setLendo] = useState(null) // { habito, dia } do devocional marcado pela grade
   const [editando, setEditando] = useState(null)
   const [visao, setVisao] = useState('semana') // 'semana' | 'mes'
   const [desloca, setDesloca] = useState(0) // 0 = semana/mês atual, -1 = anterior...
@@ -37,8 +38,16 @@ export default function Habitos() {
     if (valor >= h.meta) {
       const marca = d.habito_marcas.find((m) => m.habito_id === h.id && m.dia === k)
       if (marca?.nota && !window.confirm(`Desmarcar ${h.nome} em ${k.split('-').reverse().slice(0, 2).join('/')} (${marca.nota})?`)) return
-      return apagar('habito_marcas', { habito_id: h.id, dia: k })
+      await apagar('habito_marcas', { habito_id: h.id, dia: k })
+      // devocional: se era a leitura mais recente, o plano volta para o começo dela
+      if (h.plano === 'biblia' && marca?.nota) {
+        const ultima = d.habito_marcas.filter((m) => m.habito_id === h.id && m.nota).sort((a, b) => b.dia.localeCompare(a.dia))[0]
+        if (ultima?.dia === k) await salvar('habitos', { id: h.id, proximo: marca.nota.split('–')[0].trim() })
+      }
+      return
     }
+    // devocional: pergunta até onde leu e avança o plano
+    if (h.plano === 'biblia') return setLendo({ habito: h, dia: k })
     await gravar('habito_marcas', { habito_id: h.id, dia: k, valor: h.meta })
   }
 
@@ -103,6 +112,7 @@ export default function Habitos() {
           )
         })}
       </section>
+      {lendo && <Leitura habito={d.habitos.find((x) => x.id === lendo.habito.id) || lendo.habito} dia={lendo.dia} aoFechar={() => setLendo(null)} />}
       {editando && <EditorHabito habito={editando.id ? editando : null} aoFechar={() => setEditando(null)} />}
     </div>
   )

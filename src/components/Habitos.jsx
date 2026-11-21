@@ -76,7 +76,7 @@ export default function Habitos({ data = hoje() }) {
 }
 
 // Marca o devocional e guarda até onde leu (a Bíblia em ordem)
-function Leitura({ habito, dia, aoFechar }) {
+export function Leitura({ habito, dia, aoFechar }) {
   const { gravar, salvar } = useDados()
   const toast = useToast()
   const ini = lerPosicao(habito.proximo || 'Gênesis 1')
