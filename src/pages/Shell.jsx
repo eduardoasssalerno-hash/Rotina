@@ -15,7 +15,7 @@ import Metas from './Metas.jsx'
 import Dinheiro from './Dinheiro.jsx'
 
 export const MENU = [
-  { to: '/', nome: 'Hoje', icone: 'hoje' },
+  { to: '/', nome: 'Diário', icone: 'hoje' },
   { to: '/semana', nome: 'Semana e mês', icone: 'semana' },
   { to: '/planetas', nome: 'Planetas', icone: 'planetas' },
   { to: '/tarefas', nome: 'Tarefas', icone: 'tarefas' },
@@ -29,7 +29,7 @@ export const MENU = [
 
 // No celular cabem 5 abas: o resto fica em "Mais"
 const ABAS = [
-  { to: '/', nome: 'Hoje', icone: 'hoje' },
+  { to: '/', nome: 'Diário', icone: 'hoje' },
   { to: '/semana', nome: 'Semana', icone: 'semana' },
   { to: '/planetas', nome: 'Planetas', icone: 'planetas' },
   { to: '/dinheiro', nome: 'Dinheiro', icone: 'dinheiro' },

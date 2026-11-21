@@ -633,3 +633,10 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .itens-mae { list-style: none; margin: 8px 0 0; padding: 0; }
 .itens-mae li { display: grid; grid-template-columns: 76px 1fr auto; gap: 8px; align-items: center; min-height: 40px; border-top: 1px solid var(--linha); font-size: 14px; }
 .mae-acumulado { font-weight: 700; font-size: 14px; margin-top: 4px; }
+
+/* Diário: navegar entre os dias */
+.navegar-dia { margin: -4px 0 14px; }
+.dia-escolher { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 150px; min-height: 44px; cursor: pointer; }
+.dia-escolher strong { font-family: var(--titulo); font-size: 18px; font-weight: 600; }
+.dia-escolher input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.btn-icone:disabled { opacity: .35; cursor: default; }

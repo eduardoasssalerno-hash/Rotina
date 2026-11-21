@@ -29,13 +29,22 @@ export default function Hoje() {
   const { d, salvar, gravar, apagar } = useDados()
   const { nome } = useSessao()
   const agora = useAgora()
-  const dia = hoje()
+  // Diário: dá para voltar aos dias anteriores (e ir avançando até hoje)
+  const [volta, setVolta] = useState(0) // 0 = hoje, 1 = ontem, ...
+  const dia = addDias(hoje(), -volta)
   const iso = isoDia(dia)
+  const ehHoje = volta === 0
+  const limite = isoDia(addDias(hoje(), -399)) // os dados carregados vão até 400 dias atrás
+  function irPara(valor) {
+    if (!valor) return
+    const n = difDias(hoje(), deIso(valor))
+    setVolta(Math.min(399, Math.max(0, n)))
+  }
   const [editando, setEditando] = useState(null) // tarefa, ou {} para nova
   const folga = folgaEm(d, iso)
   const itens = itensDoDia(d, dia)
   const soltas = tarefasSemHora(d, dia)
-  const atrasadas = d.tarefas.filter((t) => !t.feita && t.dia && t.dia < iso).sort((a, b) => a.dia.localeCompare(b.dia))
+  const atrasadas = !ehHoje ? [] : d.tarefas.filter((t) => !t.feita && t.dia && t.dia < iso).sort((a, b) => a.dia.localeCompare(b.dia))
   const feitos = itens.filter((i) => i.feito).length + soltas.filter((t) => t.feita).length
   const total = itens.length + soltas.length
   const h = agora.getHours() + agora.getMinutes() / 60
@@ -48,10 +57,19 @@ export default function Hoje() {
 
   return (
     <div className="tela">
-      <Cabecalho titulo={nome ? `${saudacao(agora)}, ${nome.split(' ')[0]}` : saudacao(agora)} sub={dataLonga(dia)}>
+      <Cabecalho titulo={ehHoje ? (nome ? `${saudacao(agora)}, ${nome.split(' ')[0]}` : saudacao(agora)) : 'Diário'} sub={ehHoje ? dataLonga(dia) : `${volta === 1 ? 'Ontem · ' : ''}${dataLonga(dia)}`}>
         <button type="button" className="btn btn-primario" onClick={() => setEditando({})}><Icone nome="mais" tamanho={20} />Tarefa</button>
       </Cabecalho>
-      {folga && <div className="info">Hoje é {folga.nome}: sem aula e sem estágio.</div>}
+      <div className="navegar navegar-dia">
+        <button type="button" className="btn-icone" onClick={() => setVolta((v) => Math.min(399, v + 1))} aria-label="Dia anterior"><Icone nome="voltar" /></button>
+        <label className="dia-escolher">
+          <strong>{ehHoje ? 'Hoje' : volta === 1 ? 'Ontem' : dataCurta(dia)}</strong>
+          <input type="date" value={iso} min={limite} max={isoDia(hoje())} aria-label="Escolher o dia" onChange={(e) => irPara(e.target.value)} />
+        </label>
+        <button type="button" className="btn-icone" onClick={() => setVolta((v) => Math.max(0, v - 1))} disabled={ehHoje} aria-label="Próximo dia"><Icone nome="avancar" /></button>
+        {!ehHoje && <button type="button" className="btn btn-sec btn-peq" onClick={() => setVolta(0)}>Hoje</button>}
+      </div>
+      {folga && <div className="info">{ehHoje ? 'Hoje é' : 'Foi'} {folga.nome}: sem aula e sem estágio.</div>}
 
       <div className="grade-hoje">
         <div className="coluna">
@@ -60,9 +78,9 @@ export default function Hoje() {
               <h2>Seu dia <span className="suave">· {feitos} de {total} feitos</span></h2>
               <Link to="/semana">Semana</Link>
             </div>
-            {itens.length === 0 && <Vazio>Nada com horário hoje.</Vazio>}
+            {itens.length === 0 && <Vazio>{ehHoje ? 'Nada com horário hoje.' : 'Nada com horário neste dia.'}</Vazio>}
             {itens.map((it) => {
-              const agoraAqui = h >= it.ini && h < it.fim
+              const agoraAqui = ehHoje && h >= it.ini && h < it.fim
               const detalhe = it.tipo === 'tarefa'
                 ? [it.projeto?.nome || it.area.nome, `até ${hhmm(it.fim)}`]
                 : it.area.privada || it.titulo === it.area.nome ? [`até ${hhmm(it.fim)}`, 'fixo'] : [it.area.nome, `até ${hhmm(it.fim)}`, 'fixo']
@@ -88,10 +106,10 @@ export default function Hoje() {
 
           <section className="cartao">
             <div className="cab-cartao">
-              <h2>Tarefas de hoje <span className="suave">· {soltas.filter((t) => t.feita).length} de {soltas.length}</span></h2>
+              <h2>{ehHoje ? 'Tarefas de hoje' : 'Tarefas do dia'} <span className="suave">· {soltas.filter((t) => t.feita).length} de {soltas.length}</span></h2>
               <Link to="/tarefas">Todas</Link>
             </div>
-            {soltas.length === 0 && <Vazio>Sem tarefas soltas para hoje.</Vazio>}
+            {soltas.length === 0 && <Vazio>{ehHoje ? 'Sem tarefas soltas para hoje.' : 'Sem tarefas soltas neste dia.'}</Vazio>}
             {soltas.map((t) => <LinhaTarefa key={t.id} tarefa={t} aoEditar={setEditando} />)}
             {atrasadas.length > 0 && (
               <div className="atrasadas">
@@ -109,8 +127,8 @@ export default function Hoje() {
 
         <div className="coluna">
           <Habitos data={dia} />
-          <ProximoTreino />
-          <Prazos />
+          {ehHoje && <ProximoTreino />}
+          {ehHoje && <Prazos />}
         </div>
       </div>
       {editando && <EditorTarefa tarefa={editando.id ? editando : null} padrao={{ dia: iso }} aoFechar={() => setEditando(null)} />}
