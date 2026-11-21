@@ -183,7 +183,7 @@ export default function Foco() {
               <div className="duracoes">
                 <Segmentos label="Duração" value={DURACOES.includes(minutos) ? minutos : null} onChange={setMinutos} options={DURACOES.map((m) => ({ v: m, label: `${m} min` }))} />
               </div>
-              <p className="suave dica-disco">Gire o círculo para ajustar o tempo: cada volta são 60 minutos (até 4 horas).</p>
+              <p className="suave dica-disco">Gire o círculo para ajustar o tempo: anda de 10 em 10 minutos, e cada volta são 60 (até 4 horas).</p>
               <label className="campo foco-tarefa">
                 <span className="campo-rotulo">No que você vai focar?</span>
                 <select value={tarefaId} onChange={(e) => setTarefaId(e.target.value)}>
@@ -247,16 +247,17 @@ export default function Foco() {
 }
 
 // Disco para escolher o tempo: arrastar em volta do círculo vai somando os minutos.
-// Uma volta = 60 minutos; dá para dar várias voltas (até 240). Setas do teclado também funcionam.
-const MIN_DISCO = 1
+// Uma volta = 60 minutos, andando de 10 em 10; dá para dar várias voltas (até 240). Setas do teclado também funcionam.
+const MIN_DISCO = 10
 const MAX_DISCO = 240
+const PASSO_DISCO = 10
 function Disco({ minutos, aoMudar }) {
   const ref = useRef(null)
   const giro = useRef(null) // { ang, graus }
   const [arrastando, setArrastando] = useState(false)
   const R = 44
   const C = 2 * Math.PI * R
-  const limitar = (m) => Math.max(MIN_DISCO, Math.min(MAX_DISCO, Math.round(m)))
+  const limitar = (m) => Math.max(MIN_DISCO, Math.min(MAX_DISCO, Math.round(m / PASSO_DISCO) * PASSO_DISCO))
 
   function angulo(e) {
     const r = ref.current.getBoundingClientRect()
@@ -283,7 +284,7 @@ function Disco({ minutos, aoMudar }) {
   }
   function fim() { giro.current = null; setArrastando(false) }
   function teclas(e) {
-    const passo = e.shiftKey ? 5 : 1
+    const passo = PASSO_DISCO
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); aoMudar(limitar(minutos + passo)) }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); aoMudar(limitar(minutos - passo)) }
   }

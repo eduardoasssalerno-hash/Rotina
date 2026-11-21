@@ -653,11 +653,14 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .navegar-habitos strong { min-width: 160px; font-size: 16px; }
 .grade-habito { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; max-width: 460px; }
 .grade-habito-cab { font-size: 11.5px; color: var(--suave); text-align: center; font-weight: 600; }
-.grade-habito i { font-style: normal; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--suave); }
-.grade-habito.semana i { height: 38px; }
-.grade-habito.mes i { aspect-ratio: 1; max-height: 40px; font-size: 11.5px; border-radius: 6px; }
-.grade-habito i.n4 { color: var(--sobre-acento); }
-.grade-habito i.n2 { background: color-mix(in srgb, var(--acento) 45%, var(--superficie)); color: var(--sobre-acento); }
-.grade-habito i.fora { background: transparent; border: 1px dashed var(--borda); }
-.grade-habito i.futuro { background: var(--superficie-2); border: 1px solid var(--linha); opacity: .7; }
-.grade-habito i.hoje { outline: 2px solid var(--foco); outline-offset: 1px; }
+.grade-habito .dia-habito { font-style: normal; border: 0; padding: 0; font-family: inherit; cursor: pointer; min-width: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--suave); }
+.grade-habito.semana .dia-habito { height: 38px; }
+.grade-habito.mes .dia-habito { aspect-ratio: 1; max-height: 40px; font-size: 11.5px; border-radius: 6px; }
+.grade-habito .dia-habito.n4 { color: var(--sobre-acento); }
+.grade-habito .dia-habito.n2 { background: color-mix(in srgb, var(--acento) 45%, var(--superficie)); color: var(--sobre-acento); }
+.grade-habito .dia-habito.fora { background: transparent; border: 1px dashed var(--borda); }
+.grade-habito .dia-habito.futuro { background: var(--superficie-2); border: 1px solid var(--linha); opacity: .7; }
+.grade-habito .dia-habito.hoje { outline: 2px solid var(--foco); outline-offset: 1px; }
+.grade-habito .dia-habito:disabled { cursor: default; }
+.grade-habito .dia-habito.n0 { background: var(--neutro); }
+.grade-habito .dia-habito.n4 { background: var(--acento); }

@@ -8,7 +8,7 @@ import { Cabecalho } from './Shell.jsx'
 const ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0]
 
 export default function Habitos() {
-  const { d } = useDados()
+  const { d, gravar, apagar } = useDados()
   const [editando, setEditando] = useState(null)
   const [visao, setVisao] = useState('semana') // 'semana' | 'mes'
   const [desloca, setDesloca] = useState(0) // 0 = semana/mês atual, -1 = anterior...
@@ -31,10 +31,20 @@ export default function Habitos() {
   // no mês, alinha o dia 1 na coluna do dia da semana (semana começa na segunda)
   const vazios = visao === 'mes' ? (ini.getDay() + 6) % 7 : 0
   const trocarVisao = (v) => { setVisao(v); setDesloca(0) }
+  // tocar num dia (até hoje) marca ou desmarca o hábito naquele dia
+  async function alternarDia(h, k, valor) {
+    if (k > isoHoje) return
+    if (valor >= h.meta) {
+      const marca = d.habito_marcas.find((m) => m.habito_id === h.id && m.dia === k)
+      if (marca?.nota && !window.confirm(`Desmarcar ${h.nome} em ${k.split('-').reverse().slice(0, 2).join('/')} (${marca.nota})?`)) return
+      return apagar('habito_marcas', { habito_id: h.id, dia: k })
+    }
+    await gravar('habito_marcas', { habito_id: h.id, dia: k, valor: h.meta })
+  }
 
   return (
     <div className="tela">
-      <Cabecalho titulo="Hábitos" sub="Toque para marcar hoje. Embaixo, veja cada hábito na semana ou no mês.">
+      <Cabecalho titulo="Hábitos" sub="Toque para marcar hoje. Embaixo, veja cada hábito na semana ou no mês e toque num dia para marcar ou desmarcar.">
         <button type="button" className="btn btn-primario" onClick={() => setEditando({})}><Icone nome="mais" tamanho={20} />Hábito</button>
       </Cabecalho>
       <HabitosHoje />
@@ -81,9 +91,11 @@ export default function Habitos() {
                   const estado = feito(k) ? 'n4' : valor > 0 ? 'n2' : futuro ? 'futuro' : previsto ? 'n0' : 'fora'
                   const txt = feito(k) ? 'feito' : valor > 0 ? `${valor} de ${h.meta}` : futuro ? 'ainda não chegou' : previsto ? 'não feito' : 'não previsto'
                   return (
-                    <i key={k} className={`${estado} ${k === isoHoje ? 'hoje' : ''}`} title={`${DIAS_CURTOS[x.getDay()]} ${x.getDate()}: ${txt}`}>
+                    <button key={k} type="button" className={`dia-habito ${estado} ${k === isoHoje ? 'hoje' : ''}`} disabled={futuro}
+                      aria-pressed={feito(k)} aria-label={`${h.nome}, ${DIAS_CURTOS[x.getDay()]} ${x.getDate()}: ${txt}`} title={`${DIAS_CURTOS[x.getDay()]} ${x.getDate()}: ${txt}`}
+                      onClick={() => alternarDia(h, k, valor)}>
                       {visao === 'semana' ? (feito(k) ? <Icone nome="check" tamanho={14} /> : x.getDate()) : x.getDate()}
-                    </i>
+                    </button>
                   )
                 })}
               </div>
