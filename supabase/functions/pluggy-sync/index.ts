@@ -34,13 +34,20 @@ async function pluggy(caminho: string, apiKey: string) {
   return r.json()
 }
 
-async function todasPaginas(caminho: string, apiKey: string) {
+// Lançamentos: /v2/transactions com cursor (o /transactions antigo responde 410).
+// Repete enquanto a resposta trouxer "next".
+async function todosLancamentos(accountId: string, desde: string, apiKey: string) {
   const itens: any[] = []
-  for (let pagina = 1; pagina <= 40; pagina++) {
-    const sep = caminho.includes('?') ? '&' : '?'
-    const r = await pluggy(`${caminho}${sep}pageSize=500&page=${pagina}`, apiKey)
+  let caminho = `/v2/transactions?accountId=${encodeURIComponent(accountId)}&dateFrom=${desde}`
+  for (let pagina = 0; pagina < 60 && caminho; pagina++) {
+    const r = await pluggy(caminho, apiKey)
     itens.push(...(r.results || []))
-    if (!r.totalPages || pagina >= r.totalPages) break
+    const prox = r.next
+    if (!prox) break
+    if (/^https?:\/\//.test(prox)) caminho = prox.replace(PLUGGY, '')
+    else if (prox.startsWith('?')) caminho = `/v2/transactions${prox}`
+    else if (prox.startsWith('/')) caminho = prox
+    else caminho = `/v2/transactions?accountId=${encodeURIComponent(accountId)}&after=${encodeURIComponent(prox)}`
   }
   return itens
 }
@@ -114,7 +121,7 @@ Deno.serve(async (req) => {
           if (eConta) throw eConta
           resumo.contas++
 
-          const txs = await todasPaginas(`/transactions?accountId=${a.id}&from=${desde}`, apiKey)
+          const txs = await todosLancamentos(a.id, desde, apiKey)
           const linhas = txs.map((t: any) => {
             const valor = Math.abs(Number(t.amount) || 0)
             const saida = t.type ? t.type === 'DEBIT' : Number(t.amount) < 0
@@ -167,7 +174,8 @@ Deno.serve(async (req) => {
       } catch (e) {
         const msg = String((e as Error)?.message || e).slice(0, 300)
         resumo.erros.push(`${c.banco}: ${msg}`)
-        await sb.from('conexoes').update({ erro: msg, ultima_sincronia: agora }).eq('id', c.id)
+        // não marca a data: na próxima vez, busca de novo o período inteiro
+        await sb.from('conexoes').update({ erro: msg }).eq('id', c.id)
       }
     }
     return json(resumo)
