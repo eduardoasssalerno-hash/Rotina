@@ -10,7 +10,7 @@ const TABELAS = ['areas', 'projetos', 'tarefas', 'blocos_fixos', 'blocos_feitos'
 const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', lancamentos: 'dia', investimento_historico: 'dia' }
 const PAGINA = 1000 // o Supabase entrega no máximo 1000 linhas por vez
 // Tabelas sem coluna id: a linha é identificada por estas colunas
-const CHAVES = { blocos_feitos: ['bloco_id', 'dia'], habito_marcas: ['habito_id', 'dia'], investimento_historico: ['investimento_id', 'dia'], ajustes: ['user_id'] }
+const CHAVES = { blocos_feitos: ['bloco_id', 'dia'], habito_marcas: ['habito_id', 'dia'], investimento_historico: ['investimento_id', 'dia'], ajustes: ['user_id'], cotacoes: ['user_id', 'ticker'] }
 
 const Ctx = createContext(null)
 const vazio = Object.fromEntries(TABELAS.map((t) => [t, []]))
