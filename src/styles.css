@@ -711,3 +711,4 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .dica-universo { text-align: center; margin: 0; font-size: 13.5px; }
 .universo-cartao .segmentos { flex-wrap: wrap; justify-content: center; }
 .universo .cristo-halo, .universo .cristo rect { pointer-events: none; }
+.acoes-invest { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }

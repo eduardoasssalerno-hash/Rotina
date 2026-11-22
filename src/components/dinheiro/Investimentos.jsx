@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDados } from '../../lib/dados.jsx'
-import { dataCurta, deIso, hoje, pad, reais } from '../../lib/util.js'
-import { Vazio } from '../ui.jsx'
+import { supabase } from '../../lib/supabase.js'
+import { dataCurta, deIso, hoje, isoDia, lerValor, pad, reais } from '../../lib/util.js'
+import { Botao, Field, Icone, Modal, Segmentos, Vazio, useToast } from '../ui.jsx'
 
 export const TIPOS_INV = {
-  FIXED_INCOME: 'Renda fixa', MUTUAL_FUND: 'Fundos', EQUITY: 'Ações', ETF: 'ETFs', SECURITY: 'Previdência e títulos',
+  FIXED_INCOME: 'Renda fixa', MUTUAL_FUND: 'Fundos', EQUITY: 'Ações', FII: 'FIIs e ETFs', ETF: 'ETFs', SECURITY: 'Previdência e títulos',
   COE: 'COE', OTHER: 'Outros', outro: 'Outros',
 }
 const SUBTIPOS = { TREASURY: 'Tesouro', CDB: 'CDB', LCI: 'LCI', LCA: 'LCA', LC: 'LC', CRI: 'CRI', CRA: 'CRA', DEBENTURES: 'Debênture' }
@@ -16,6 +17,31 @@ const pct = (v) => `${v >= 0 ? '+' : ''}${(v * 100).toLocaleString('pt-BR', { ma
 
 export default function Investimentos() {
   const { d } = useDados()
+  const [novoRF, setNovoRF] = useState(null) // {} = novo; investimento = editar
+  const [novaOp, setNovaOp] = useState(false)
+  const { atualizar, rodando } = useAtualizarInvest()
+  const manuais = d.investimentos.filter((i) => i.origem === 'manual')
+  // atualiza sozinho (índices e cotações) se a última vez foi há mais de 3 horas
+  const auto = useRef(false)
+  useEffect(() => {
+    if (auto.current || (!manuais.length && !d.operacoes_bolsa.length)) return
+    auto.current = true
+    const ultima = Math.max(0, ...manuais.map((i) => new Date(i.atualizado_em).getTime()))
+    if (Date.now() - ultima > 3 * 3600000) atualizar(true)
+  }) // eslint-disable-line react-hooks/exhaustive-deps
+  const barra = (
+    <div className="acoes-invest">
+      <button type="button" className="btn btn-sec" onClick={() => setNovoRF({})}><Icone nome="mais" tamanho={18} />Renda fixa / Tesouro</button>
+      <button type="button" className="btn btn-sec" onClick={() => setNovaOp(true)}><Icone nome="mais" tamanho={18} />Bolsa</button>
+      {(manuais.length > 0 || d.operacoes_bolsa.length > 0) && <Botao className="btn btn-sec" carregando={rodando} onClick={() => atualizar(false)}>Atualizar cotações</Botao>}
+    </div>
+  )
+  const janelas = (
+    <>
+      {novoRF && <EditorRendaFixa inv={novoRF.id ? novoRF : null} aoFechar={(ok) => { setNovoRF(null); if (ok) atualizar(true) }} />}
+      {novaOp && <EditorOperacao aoFechar={(ok) => { setNovaOp(false); if (ok) atualizar(true) }} />}
+    </>
+  )
   // posições zeradas (CDB já resgatado) não aparecem
   const ativos = d.investimentos.filter((i) => i.ativo && Number(i.saldo) > 0)
   const total = ativos.reduce((s, i) => s + Number(i.saldo || 0), 0)
@@ -30,10 +56,11 @@ export default function Investimentos() {
   const atualizado = ativos.map((i) => i.atualizado_em).sort().pop()
 
   if (!d.investimentos.length) {
-    return <div className="cartao"><Vazio>Os investimentos do BTG aparecem aqui depois que a conexão do Open Finance estiver ligada (aba Contas e regras).</Vazio></div>
+    return <>{barra}<div className="cartao"><Vazio>Os investimentos aparecem aqui pelo Open Finance ou quando você lança um à mão.</Vazio></div>{janelas}</>
   }
   return (
     <>
+      {barra}
       <div className="resumo-dinheiro">
         <div className="cartao"><span className="suave">Patrimônio investido</span><strong>{reais(total)}</strong></div>
         <div className="cartao"><span className="suave">Total aplicado</span><strong>{reais(aplicado)}</strong></div>
@@ -64,7 +91,9 @@ export default function Investimentos() {
           </section>
         ))}
       </div>
-      {atualizado && <p className="suave">Atualizado em {new Date(atualizado).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.</p>}
+      <Manuais aoEditar={setNovoRF} aoMudar={() => atualizar(true)} />
+      {atualizado && <p className="suave">Atualizado em {new Date(atualizado).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}. Renda fixa lançada à mão: valor bruto estimado pelos índices do Banco Central.</p>}
+      {janelas}
     </>
   )
 }
@@ -131,6 +160,173 @@ function Rendimentos() {
           )
         })}
       </ul>
+    </section>
+  )
+}
+
+// Chama a função que recalcula a renda fixa (índices do Banco Central) e busca as cotações da bolsa
+function useAtualizarInvest() {
+  const { carregar } = useDados()
+  const toast = useToast()
+  const [rodando, setRodando] = useState(false)
+  async function atualizar(silencioso) {
+    setRodando(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('investimentos-sync', { method: 'POST' })
+      let corpo = data
+      if (error) {
+        try { corpo = await error.context?.json?.() } catch { corpo = null }
+        throw new Error(corpo?.erro || 'Não deu para atualizar os investimentos agora.')
+      }
+      await carregar()
+      if (corpo?.avisos?.length) toast(corpo.avisos.join(' · '), 'erro')
+      else if (!silencioso) toast(`Atualizado: ${corpo?.titulos || 0} títulos e ${corpo?.ativos || 0} ativos da bolsa`)
+    } catch (e) {
+      if (!silencioso) toast(e.message, 'erro')
+    }
+    setRodando(false)
+  }
+  return { atualizar, rodando }
+}
+
+const MODELOS = [
+  { v: 'selic', label: 'Tesouro Selic', nome: 'Tesouro Selic', taxa: null },
+  { v: 'prefixado', label: 'Tesouro Prefixado', nome: 'Tesouro Prefixado', taxa: '% ao ano' },
+  { v: 'ipca', label: 'Tesouro IPCA+', nome: 'Tesouro IPCA+', taxa: '% ao ano (além do IPCA)' },
+  { v: 'cdi', label: 'CDB / LCI / LCA (% do CDI)', nome: 'CDB', taxa: '% do CDI' },
+  { v: 'fixo', label: 'Outro (eu digito o valor)', nome: '', taxa: null },
+]
+const textoTaxa = (ix, t) => (ix === 'selic' ? 'Selic' : ix === 'prefixado' ? `${t}% a.a.` : ix === 'ipca' ? `IPCA + ${t}%` : ix === 'cdi' ? `${t}% do CDI` : null)
+
+function EditorRendaFixa({ inv, aoFechar }) {
+  const { salvar } = useDados()
+  const [f, setF] = useState(() => (inv
+    ? { indexador: inv.indexador || 'fixo', nome: inv.nome, instituicao: inv.instituicao || 'BTG', aplicado: String(inv.aplicado ?? '').replace('.', ','), aplicado_em: inv.aplicado_em || '', taxa: inv.taxa_num != null ? String(inv.taxa_num).replace('.', ',') : '', vencimento: inv.vencimento || '', atual: String(inv.saldo ?? '').replace('.', ',') }
+    : { indexador: 'selic', nome: 'Tesouro Selic ', instituicao: 'BTG', aplicado: '', aplicado_em: isoDia(hoje()), taxa: '', vencimento: '', atual: '' }))
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const muda = (c) => setF((x) => ({ ...x, ...c }))
+  const modelo = MODELOS.find((m) => m.v === f.indexador)
+
+  async function enviar(e) {
+    e.preventDefault()
+    const aplicado = lerValor(f.aplicado)
+    const taxa = f.taxa ? lerValor(f.taxa) : null
+    const atual = f.indexador === 'fixo' ? lerValor(f.atual || f.aplicado) : aplicado
+    if (!f.nome.trim()) return setErro('Dê um nome, ex.: Tesouro Selic 2029.')
+    if (!(aplicado > 0)) return setErro('Coloque o valor aplicado, ex.: 1.000,00.')
+    if (f.indexador !== 'fixo' && !f.aplicado_em) return setErro('Coloque a data da aplicação.')
+    if (modelo.taxa && !(taxa > 0)) return setErro(`Coloque a taxa (${modelo.taxa}).`)
+    setSalvando(true)
+    const ok = await salvar('investimentos', {
+      ...(inv ? { id: inv.id } : { origem: 'manual' }),
+      nome: f.nome.trim().slice(0, 120), instituicao: f.instituicao.trim().slice(0, 60) || null,
+      tipo: 'FIXED_INCOME', subtipo: f.indexador === 'cdi' ? 'CDB' : f.indexador === 'fixo' ? null : 'TREASURY',
+      indexador: f.indexador, taxa_num: modelo.taxa ? taxa : null, taxa: textoTaxa(f.indexador, String(taxa ?? '').replace('.', ',')),
+      aplicado, aplicado_em: f.aplicado_em || null, vencimento: f.vencimento || null,
+      saldo: inv && f.indexador !== 'fixo' ? inv.saldo : atual, ativo: true, atualizado_em: new Date().toISOString(),
+    })
+    setSalvando(false)
+    if (ok) aoFechar(true)
+  }
+
+  return (
+    <Modal titulo={inv ? 'Editar investimento' : 'Novo investimento de renda fixa'} aoFechar={() => aoFechar(false)}
+      rodape={<><div className="espaco" /><button type="button" className="btn btn-sec" onClick={() => aoFechar(false)}>Cancelar</button><Botao type="submit" form="form-rf" carregando={salvando}>Salvar</Botao></>}>
+      <form id="form-rf" className="form" onSubmit={enviar}>
+        <Field label="Tipo">
+          <select value={f.indexador} onChange={(e) => { const m = MODELOS.find((x) => x.v === e.target.value); muda({ indexador: m.v, nome: inv ? f.nome : `${m.nome}${m.v === 'fixo' ? '' : ' '}` }) }}>
+            {MODELOS.map((m) => <option key={m.v} value={m.v}>{m.label}</option>)}
+          </select>
+        </Field>
+        <div className="grade-2">
+          <Field label="Nome" hint="Ex.: Tesouro Selic 2029"><input type="text" value={f.nome} maxLength={120} onChange={(e) => muda({ nome: e.target.value })} /></Field>
+          <Field label="Instituição"><input type="text" value={f.instituicao} maxLength={60} onChange={(e) => muda({ instituicao: e.target.value })} /></Field>
+        </div>
+        <div className="grade-2">
+          <Field label="Valor aplicado (R$)"><input type="text" inputMode="decimal" value={f.aplicado} placeholder="1.000,00" onChange={(e) => muda({ aplicado: e.target.value })} /></Field>
+          <Field label="Data da aplicação"><input type="date" value={f.aplicado_em} max={isoDia(hoje())} onChange={(e) => muda({ aplicado_em: e.target.value })} /></Field>
+        </div>
+        <div className="grade-2">
+          {modelo.taxa && <Field label={`Taxa (${modelo.taxa})`}><input type="text" inputMode="decimal" value={f.taxa} placeholder={f.indexador === 'cdi' ? '100' : '6,5'} onChange={(e) => muda({ taxa: e.target.value })} /></Field>}
+          {f.indexador === 'fixo' && <Field label="Valor de hoje (R$)" hint="Atualize quando quiser olhando o extrato"><input type="text" inputMode="decimal" value={f.atual} placeholder="igual ao aplicado" onChange={(e) => muda({ atual: e.target.value })} /></Field>}
+          <Field label="Vencimento (opcional)"><input type="date" value={f.vencimento} onChange={(e) => muda({ vencimento: e.target.value })} /></Field>
+        </div>
+        {f.indexador !== 'fixo' && <p className="suave">O app estima o valor de hoje (bruto, sem IR) com os índices do Banco Central. Se tiver várias aplicações no mesmo título em datas diferentes, lance cada uma.</p>}
+        {erro && <p className="erro">{erro}</p>}
+      </form>
+    </Modal>
+  )
+}
+
+function EditorOperacao({ aoFechar }) {
+  const { salvar } = useDados()
+  const [f, setF] = useState({ ticker: '', tipo: 'compra', quantidade: '', preco: '', taxas: '', dia: isoDia(hoje()), instituicao: 'BTG' })
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const muda = (c) => setF((x) => ({ ...x, ...c }))
+  async function enviar(e) {
+    e.preventDefault()
+    const ticker = f.ticker.trim().toUpperCase()
+    const q = Number(String(f.quantidade).replace(',', '.'))
+    const preco = lerValor(f.preco)
+    if (!/^[A-Z0-9]{4,8}$/.test(ticker)) return setErro('Código do ativo como na B3, ex.: PETR4, MXRF11, BOVA11.')
+    if (!(q > 0)) return setErro('Quantidade maior que zero.')
+    if (!(preco >= 0)) return setErro('Preço por cota, ex.: 35,50.')
+    setSalvando(true)
+    const ok = await salvar('operacoes_bolsa', { ticker, tipo: f.tipo, quantidade: q, preco, taxas: lerValor(f.taxas) || 0, dia: f.dia, instituicao: f.instituicao.trim().slice(0, 60) || null })
+    setSalvando(false)
+    if (ok) aoFechar(true)
+  }
+  return (
+    <Modal titulo="Compra ou venda na bolsa" aoFechar={() => aoFechar(false)}
+      rodape={<><div className="espaco" /><button type="button" className="btn btn-sec" onClick={() => aoFechar(false)}>Cancelar</button><Botao type="submit" form="form-op" carregando={salvando}>Salvar</Botao></>}>
+      <form id="form-op" className="form" onSubmit={enviar}>
+        <Segmentos label="Operação" value={f.tipo} onChange={(v) => muda({ tipo: v })} options={[{ v: 'compra', label: 'Compra' }, { v: 'venda', label: 'Venda' }]} />
+        <div className="grade-2">
+          <Field label="Código do ativo" hint="Ex.: PETR4, ITSA4, MXRF11"><input type="text" value={f.ticker} maxLength={8} autoCapitalize="characters" spellCheck={false} onChange={(e) => muda({ ticker: e.target.value.toUpperCase() })} /></Field>
+          <Field label="Data"><input type="date" value={f.dia} max={isoDia(hoje())} onChange={(e) => muda({ dia: e.target.value })} /></Field>
+        </div>
+        <div className="grade-3">
+          <Field label="Quantidade"><input type="text" inputMode="decimal" value={f.quantidade} placeholder="10" onChange={(e) => muda({ quantidade: e.target.value })} /></Field>
+          <Field label="Preço por cota (R$)"><input type="text" inputMode="decimal" value={f.preco} placeholder="35,50" onChange={(e) => muda({ preco: e.target.value })} /></Field>
+          <Field label="Taxas (R$, opcional)"><input type="text" inputMode="decimal" value={f.taxas} placeholder="0,00" onChange={(e) => muda({ taxas: e.target.value })} /></Field>
+        </div>
+        <Field label="Instituição"><input type="text" value={f.instituicao} maxLength={60} onChange={(e) => muda({ instituicao: e.target.value })} /></Field>
+        {erro && <p className="erro">{erro}</p>}
+      </form>
+    </Modal>
+  )
+}
+
+// O que foi lançado à mão: renda fixa (editar/apagar) e operações da bolsa (apagar)
+function Manuais({ aoEditar, aoMudar }) {
+  const { d, apagar } = useDados()
+  const rf = d.investimentos.filter((i) => i.origem === 'manual' && !i.ticker && i.ativo).sort((a, b) => String(a.aplicado_em).localeCompare(String(b.aplicado_em)))
+  const ops = [...d.operacoes_bolsa].sort((a, b) => b.dia.localeCompare(a.dia))
+  if (!rf.length && !ops.length) return null
+  return (
+    <section className="cartao">
+      <div className="cab-cartao"><h2>Lançados à mão</h2><span className="suave">{rf.length} em renda fixa · {ops.length} operações na bolsa</span></div>
+      {rf.map((i) => (
+        <div key={i.id} className="conexao">
+          <div className="conexao-textos"><strong>{i.nome}</strong><span className="suave">{[i.instituicao, i.taxa, i.aplicado_em ? `aplicado ${reais(i.aplicado)} em ${deIso(i.aplicado_em).toLocaleDateString('pt-BR')}` : null].filter(Boolean).join(' · ')}</span></div>
+          <button type="button" className="btn-icone" aria-label={`Editar ${i.nome}`} onClick={() => aoEditar(i)}><Icone nome="editar" tamanho={18} /></button>
+          <button type="button" className="btn-icone" aria-label={`Apagar ${i.nome}`} onClick={() => { if (window.confirm(`Apagar ${i.nome}? O histórico dele some do gráfico.`)) apagar('investimentos', i) }}><Icone nome="lixo" tamanho={18} /></button>
+        </div>
+      ))}
+      {ops.map((o) => {
+        const c = d.cotacoes.find((x) => x.ticker === o.ticker)
+        return (
+          <div key={o.id} className="conexao">
+            <div className="conexao-textos">
+              <strong>{o.tipo === 'compra' ? 'Compra' : 'Venda'} · {o.ticker}</strong>
+              <span className="suave">{dataCurta(deIso(o.dia))} · {Number(o.quantidade).toLocaleString('pt-BR')} × {reais(o.preco)}{c ? ` · hoje ${reais(c.preco)}` : ''}</span>
+            </div>
+            <button type="button" className="btn-icone" aria-label={`Apagar operação de ${o.ticker}`} onClick={() => { if (window.confirm(`Apagar esta ${o.tipo} de ${o.ticker}?`)) apagar('operacoes_bolsa', o).then(aoMudar) }}><Icone nome="lixo" tamanho={18} /></button>
+          </div>
+        )
+      })}
     </section>
   )
 }
