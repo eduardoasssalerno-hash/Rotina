@@ -3,6 +3,10 @@ import { useDados } from '../../lib/dados.jsx'
 import { reais } from '../../lib/util.js'
 import { Botao, Field, Icone, Vazio } from '../ui.jsx'
 
+// o diagnóstico técnico da função vira uma frase curta
+const textoErro = (e) => (/^Investimentos: 0/.test(e)
+  ? 'Autorizado, mas o banco ainda não enviou nenhum investimento para a Pluggy.'
+  : /^Investimentos: Pluggy/.test(e) ? 'A Pluggy não respondeu os investimentos agora; tenta de novo na próxima atualização.' : `Problema: ${e}`)
 const quando = (ts) => (ts ? new Date(ts).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'nunca')
 
 export default function Conexoes() {
@@ -43,7 +47,7 @@ export default function Conexoes() {
               <div className="conexao-textos">
                 <strong>{c.banco}{c.so_investimentos ? ' · só investimentos' : ''}</strong>
                 <span className="suave">Atualizado: {quando(c.ultima_sincronia)}{c.consentimento_ate ? ` · autorização vale até ${new Date(c.consentimento_ate).toLocaleDateString('pt-BR')}` : ''}</span>
-                {c.erro && <span className="aviso-peq">Problema: {c.erro}</span>}
+                {c.erro && <span className="aviso-peq">{textoErro(c.erro)}</span>}
               </div>
               <button type="button" className="btn-icone" aria-label={`Remover ${c.banco}`} onClick={() => { if (window.confirm(`Remover a conexão ${c.banco}? Os lançamentos já trazidos continuam.`)) apagar('conexoes', c) }}><Icone nome="lixo" tamanho={18} /></button>
             </div>

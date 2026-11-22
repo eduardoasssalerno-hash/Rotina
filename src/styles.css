@@ -139,7 +139,7 @@ p { margin: 0; }
   font-weight: 600; font-size: 14.5px;
 }
 [data-tema='escuro'] .info { color: var(--tinta); }
-.aviso-peq { color: var(--laranja); font-weight: 700; font-size: 13.5px; }
+.aviso-peq { color: var(--laranja); font-weight: 700; font-size: 13.5px; overflow-wrap: anywhere; }
 .tag {
   display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; padding: 3px 9px;
   border-radius: 999px; background: var(--acento-claro); color: var(--acento); white-space: nowrap; font-family: var(--fonte);
