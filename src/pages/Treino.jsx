@@ -19,48 +19,30 @@ const fmtSeries = (v, medida) => (v?.length ? v.map((n) => (medida === 'segundos
 export const planosAtivos = (d) => (d.treino_planos || []).filter((p) => p.ativo).sort((a, b) => a.ordem - b.ordem)
 const porHora = (a, b) => (a.inicio || '99').localeCompare(b.inicio || '99')
 const diasTxt = (p) => [...p.dias].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((n) => DIAS_CURTOS[n]).join(', ')
-const subPlano = (p) => [p.nome, p.dias.length ? diasTxt(p) : '', p.inicio ? `às ${p.inicio.slice(0, 5)}` : ''].filter(Boolean).join(' · ')
 
 export default function Treino() {
   const { d } = useDados()
   const [dia, setDia] = useState(() => hoje())
-  const [planoId, setPlanoId] = useState(null)
   const iso = isoDia(dia)
   const planos = planosAtivos(d)
+  // cada dia tem os seus treinos, na ordem do horário (sábado: Calistenia e depois Pliometria)
   const doDia = planos.filter((p) => p.dias.includes(dia.getDay())).sort(porHora)
-  const plano = planos.find((p) => p.id === planoId) || doDia[0] || planos[0]
   const pendente = d.treinos.filter((t) => t.concluido && !t.dor && t.dia < isoDia(hoje())).sort((a, b) => b.dia.localeCompare(a.dia))[0]
-  // ao trocar de dia, volta para o treino daquele dia
-  const irPara = (x) => { setDia(x); setPlanoId(null) }
+  const semana = planos.filter((p) => p.dias.length).map((p) => `${p.nome}: ${diasTxt(p)}`).join(' · ')
 
   return (
     <div className="tela">
-      <Cabecalho titulo="Treino" sub={plano ? subPlano(plano) : 'Treino'} />
+      <Cabecalho titulo="Treino" sub={semana || 'Treino'} />
       {pendente && <Feedback treino={pendente} />}
       <div className="navegar">
-        <button type="button" className="btn-icone" onClick={() => irPara(addDias(dia, -1))} aria-label="Dia anterior"><Icone nome="voltar" /></button>
+        <button type="button" className="btn-icone" onClick={() => setDia(addDias(dia, -1))} aria-label="Dia anterior"><Icone nome="voltar" /></button>
         <strong>{dataLonga(dia)}</strong>
-        <button type="button" className="btn-icone" onClick={() => irPara(addDias(dia, 1))} aria-label="Próximo dia"><Icone nome="avancar" /></button>
-        {iso !== isoDia(hoje()) && <button type="button" className="btn btn-sec btn-peq" onClick={() => irPara(hoje())}>Hoje</button>}
+        <button type="button" className="btn-icone" onClick={() => setDia(addDias(dia, 1))} aria-label="Próximo dia"><Icone nome="avancar" /></button>
+        {iso !== isoDia(hoje()) && <button type="button" className="btn btn-sec btn-peq" onClick={() => setDia(hoje())}>Hoje</button>}
       </div>
-      {planos.length > 1 && (
-        <div className="chips planos-treino" role="group" aria-label="Plano de treino">
-          {planos.map((p) => {
-            const feito = d.treinos.some((t) => t.dia === iso && t.plano_id === p.id && t.concluido)
-            return (
-              <button key={p.id} type="button" className={`chip ${p.id === plano?.id ? 'ativo' : ''}`} aria-pressed={p.id === plano?.id} onClick={() => setPlanoId(p.id)}>
-                {feito && <Icone nome="check" />}{p.nome}{doDia.some((x) => x.id === p.id) ? ' · hoje' : ''}
-              </button>
-            )
-          })}
-        </div>
-      )}
-      {!plano ? <div className="cartao"><Vazio>Nenhum plano de treino cadastrado.</Vazio></div> : (
-        <>
-          {!plano.dias.includes(dia.getDay()) && <div className="info">{plano.nome} não é para este dia. Se treinou mesmo assim, pode registrar aqui.</div>}
-          <TreinoDoDia key={`${iso}-${plano.id}`} iso={iso} plano={plano} />
-        </>
-      )}
+      {!planos.length && <div className="cartao"><Vazio>Nenhum treino cadastrado.</Vazio></div>}
+      {planos.length > 0 && !doDia.length && <div className="info">Nenhum treino marcado para este dia.</div>}
+      {doDia.map((p) => <TreinoDoDia key={`${iso}-${p.id}`} iso={iso} plano={p} />)}
       <Historico />
     </div>
   )
@@ -101,7 +83,7 @@ function TreinoDoDia({ iso, plano }) {
   return (
     <section className="cartao treino">
       <div className="cab-cartao">
-        <h2>{plano.nome} {treino?.concluido && <span className="tag tag-verde">Concluído</span>}</h2>
+        <h2>{plano.nome}{plano.inicio ? ` · ${plano.inicio.slice(0, 5)}` : ''} {treino?.concluido && <span className="tag tag-verde">Concluído</span>}</h2>
         <span className="suave">{comCarga ? 'Anote as repetições e a carga (kg) de cada série' : 'Anote quanto fez em cada série'}</span>
       </div>
       {plano.descricao && <div className="caixa caixa-atencao regras-plano"><strong>Antes de começar</strong><span>{plano.descricao}</span></div>}

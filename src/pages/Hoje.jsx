@@ -31,8 +31,8 @@ export default function Hoje() {
   const { d, salvar, gravar, apagar } = dados
   const { nome } = useSessao()
   const agora = useAgora()
-  // Diário: dá para voltar aos dias anteriores (e ir avançando até hoje)
-  const [volta, setVolta] = useState(0) // 0 = hoje, 1 = ontem, ...
+  // Diário: dá para voltar aos dias anteriores e também ver os próximos dias (até 1 ano)
+  const [volta, setVolta] = useState(0) // 0 = hoje, 1 = ontem, -1 = amanhã ...
   const dia = addDias(hoje(), -volta)
   const iso = isoDia(dia)
   const ehHoje = volta === 0
@@ -40,7 +40,7 @@ export default function Hoje() {
   function irPara(valor) {
     if (!valor) return
     const n = difDias(hoje(), deIso(valor))
-    setVolta(Math.min(399, Math.max(0, n)))
+    setVolta(Math.min(399, Math.max(-365, n)))
   }
   const [editando, setEditando] = useState(null) // tarefa, ou {} para nova
   const folga = folgaEm(d, iso)
@@ -61,19 +61,19 @@ export default function Hoje() {
 
   return (
     <div className="tela">
-      <Cabecalho titulo={ehHoje ? (nome ? `${saudacao(agora)}, ${nome.split(' ')[0]}` : saudacao(agora)) : 'Diário'} sub={ehHoje ? dataLonga(dia) : `${volta === 1 ? 'Ontem · ' : ''}${dataLonga(dia)}`}>
+      <Cabecalho titulo={ehHoje ? (nome ? `${saudacao(agora)}, ${nome.split(' ')[0]}` : saudacao(agora)) : 'Diário'} sub={ehHoje ? dataLonga(dia) : `${volta === 1 ? 'Ontem · ' : volta === -1 ? 'Amanhã · ' : ''}${dataLonga(dia)}`}>
         <button type="button" className="btn btn-primario" onClick={() => setEditando({})}><Icone nome="mais" tamanho={20} />Tarefa</button>
       </Cabecalho>
       <div className="navegar navegar-dia">
         <button type="button" className="btn-icone" onClick={() => setVolta((v) => Math.min(399, v + 1))} aria-label="Dia anterior"><Icone nome="voltar" /></button>
         <label className="dia-escolher">
-          <strong>{ehHoje ? 'Hoje' : volta === 1 ? 'Ontem' : dataCurta(dia)}</strong>
-          <input type="date" value={iso} min={limite} max={isoDia(hoje())} aria-label="Escolher o dia" onChange={(e) => irPara(e.target.value)} />
+          <strong>{ehHoje ? 'Hoje' : volta === 1 ? 'Ontem' : volta === -1 ? 'Amanhã' : dataCurta(dia)}</strong>
+          <input type="date" value={iso} min={limite} max={isoDia(addDias(hoje(), 365))} aria-label="Escolher o dia" onChange={(e) => irPara(e.target.value)} />
         </label>
-        <button type="button" className="btn-icone" onClick={() => setVolta((v) => Math.max(0, v - 1))} disabled={ehHoje} aria-label="Próximo dia"><Icone nome="avancar" /></button>
+        <button type="button" className="btn-icone" onClick={() => setVolta((v) => Math.max(-365, v - 1))} aria-label="Próximo dia"><Icone nome="avancar" /></button>
         {!ehHoje && <button type="button" className="btn btn-sec btn-peq" onClick={() => setVolta(0)}>Hoje</button>}
       </div>
-      {folga && <div className="info">{ehHoje ? 'Hoje é' : 'Foi'} {folga.nome}: sem aula e sem estágio.</div>}
+      {folga && <div className="info">{ehHoje ? 'Hoje é' : volta < 0 ? 'Vai ser' : 'Foi'} {folga.nome}: sem aula e sem estágio.</div>}
 
       <div className="grade-hoje">
         <div className="coluna">

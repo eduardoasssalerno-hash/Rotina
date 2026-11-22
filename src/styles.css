@@ -324,7 +324,12 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .itens-compactos li:first-child { border-top: 0; }
 .itens-compactos li i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .itens-compactos li i.sem-hora { border: 2px solid var(--borda-forte); }
-.itens-compactos .hora { font-size: 14px; width: 46px; }
+.itens-compactos .hora { font-size: 13.5px; width: 92px; flex: none; font-variant-numeric: tabular-nums; }
+.detalhe-horario { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.detalhe-horario div { background: var(--superficie-2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.detalhe-horario strong { font-family: var(--titulo); font-size: 22px; font-weight: 600; }
+.detalhe-area { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-weight: 600; }
+.detalhe-area i { width: 12px; height: 12px; border-radius: 3px; }
 .itens-compactos li.feito > :last-child { text-decoration: line-through; color: var(--suave); }
 .mes-area { display: flex; flex-direction: column; gap: 14px; }
 .mes { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
@@ -422,8 +427,6 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .serie .input-carga { margin-top: 2px; min-height: 44px; font-size: 18px; }
 .regras-plano { margin: 0 0 6px; }
 .regras-plano span { white-space: pre-line; }
-.planos-treino { margin: 2px 0 2px; }
-.planos-treino .chip svg { width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
 .series-botoes { display: flex; gap: 6px; align-self: center; }
 .caixas-ex { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .caixa { background: var(--superficie-2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
 import { folgaEm, horasPorArea, itensDoDia, tarefasSemHora } from '../lib/agenda.js'
-import { addDias, DIAS_CURTOS, deIso, hhmm, hoje, inicioSemana, isoDia, MESES, pad } from '../lib/util.js'
-import { Icone, Segmentos } from '../components/ui.jsx'
+import { addDias, DIAS, DIAS_CURTOS, deIso, duracao, hhmm, hoje, inicioSemana, isoDia, MESES, pad } from '../lib/util.js'
+import { Icone, Modal, Segmentos } from '../components/ui.jsx'
 import EditorTarefa from '../components/EditorTarefa.jsx'
 import { Cabecalho } from './Shell.jsx'
 
@@ -14,6 +14,8 @@ export default function Semana() {
   const [vista, setVista] = useState('semana')
   const [base, setBase] = useState(() => hoje())
   const [editando, setEditando] = useState(null)
+  // atividade tocada: mostra início e término
+  const [vendo, setVendo] = useState(null)
   const seg = inicioSemana(base)
   const dias = Array.from({ length: 7 }, (_, i) => addDias(seg, i))
   const titulo = vista === 'semana'
@@ -39,8 +41,9 @@ export default function Semana() {
       </div>
       <Legenda />
       {vista === 'semana'
-        ? <GradeSemana dias={dias} aoEditar={setEditando} />
-        : <Mes base={base} aoEditar={setEditando} />}
+        ? <GradeSemana dias={dias} aoVer={setVendo} aoEditar={setEditando} />
+        : <Mes base={base} aoVer={setVendo} aoEditar={setEditando} />}
+      {vendo && <DetalheItem it={vendo} aoFechar={() => setVendo(null)} aoEditar={(t) => { setVendo(null); setEditando(t) }} />}
       {editando && <EditorTarefa tarefa={editando} aoFechar={() => setEditando(null)} />}
     </div>
   )
@@ -64,7 +67,7 @@ function estiloBloco(it) {
   }
 }
 
-function GradeSemana({ dias, aoEditar }) {
+function GradeSemana({ dias, aoVer, aoEditar }) {
   const { d } = useDados()
   const isoHoje = isoDia(hoje())
   const horas = Array.from({ length: FIM - INI }, (_, i) => INI + i)
@@ -95,16 +98,15 @@ function GradeSemana({ dias, aoEditar }) {
               const fim = Math.min(FIM, it.fim)
               if (fim <= ini) return null
               const alto = (fim - ini) * ALTURA
-              const Tag = it.tipo === 'tarefa' ? 'button' : 'div'
               return (
-                <Tag key={it.chave} type={it.tipo === 'tarefa' ? 'button' : undefined}
+                <button key={it.chave} type="button"
                   className={`gs-bloco ${it.feito ? 'feito' : ''} ${alto < 24 ? 'fino' : ''}`}
                   style={{ ...estiloBloco(it), top: (ini - INI) * ALTURA, height: Math.max(10, alto - 2) }}
-                  onClick={it.tipo === 'tarefa' ? () => aoEditar(it.tarefa) : undefined}
-                  title={`${it.titulo} · ${hhmm(it.ini)}–${hhmm(it.fim)}`}>
+                  onClick={() => aoVer({ ...it, dia })}
+                  aria-label={`${it.titulo}, das ${hhmm(it.ini)} às ${hhmm(it.fim)}`}>
                   <span className="gs-titulo">{it.titulo}</span>
                   {alto >= 40 && <span className="gs-hora">{hhmm(it.ini)}–{hhmm(it.fim)}</span>}
-                </Tag>
+                </button>
               )
             })}
           </div>
@@ -113,7 +115,7 @@ function GradeSemana({ dias, aoEditar }) {
 
       {/* Celular: um dia embaixo do outro, com a barra do dia de 5h às 23h */}
       <div className="lista-dias so-celular">
-        {dias.map((dia, i) => <DiaCelular key={isoDia(dia)} dia={dia} itens={porDia[i]} aoEditar={aoEditar} />)}
+        {dias.map((dia, i) => <DiaCelular key={isoDia(dia)} dia={dia} itens={porDia[i]} aoVer={aoVer} aoEditar={aoEditar} />)}
       </div>
     </>
   )
@@ -132,7 +134,7 @@ function BarraDia({ itens }) {
   )
 }
 
-function DiaCelular({ dia, itens, aoEditar }) {
+function DiaCelular({ dia, itens, aoVer, aoEditar }) {
   const { d } = useDados()
   const iso = isoDia(dia)
   const folga = folgaEm(d, iso)
@@ -145,22 +147,20 @@ function DiaCelular({ dia, itens, aoEditar }) {
       </div>
       <BarraDia itens={itens} />
       <div className="escala" aria-hidden="true"><span>5h</span><span>11h</span><span>17h</span><span>23h</span></div>
-      <ListaItens itens={itens} soltas={soltas} aoEditar={aoEditar} />
+      <ListaItens dia={dia} itens={itens} soltas={soltas} aoVer={aoVer} aoEditar={aoEditar} />
     </section>
   )
 }
 
-function ListaItens({ itens, soltas = [], aoEditar }) {
+function ListaItens({ dia, itens, soltas = [], aoVer, aoEditar }) {
   if (!itens.length && !soltas.length) return <p className="vazio">Dia livre.</p>
   return (
     <ul className="itens-compactos">
       {itens.map((it) => (
         <li key={it.chave} className={it.feito ? 'feito' : ''}>
           <i style={{ background: it.area.cor }} aria-hidden="true" />
-          <span className="hora">{hhmm(it.ini)}</span>
-          {it.tipo === 'tarefa'
-            ? <button type="button" className="link-titulo" onClick={() => aoEditar(it.tarefa)}>{it.titulo}</button>
-            : <span>{it.titulo}</span>}
+          <span className="hora">{hhmm(it.ini)}–{hhmm(it.fim)}</span>
+          <button type="button" className="link-titulo" onClick={() => aoVer({ ...it, dia })}>{it.titulo}</button>
         </li>
       ))}
       {soltas.map((t) => (
@@ -174,7 +174,7 @@ function ListaItens({ itens, soltas = [], aoEditar }) {
   )
 }
 
-function Mes({ base, aoEditar }) {
+function Mes({ base, aoVer, aoEditar }) {
   const { d } = useDados()
   const [escolhido, setEscolhido] = useState(null)
   const primeiro = new Date(base.getFullYear(), base.getMonth(), 1)
@@ -214,9 +214,26 @@ function Mes({ base, aoEditar }) {
       {diaSel && (
         <section className="cartao">
           <div className="cab-cartao"><h2>{DIAS_CURTOS[diaSel.getDay()]} {diaSel.getDate()} de {MESES[diaSel.getMonth()]}</h2></div>
-          <ListaItens itens={itensDoDia(d, diaSel)} soltas={tarefasSemHora(d, diaSel)} aoEditar={aoEditar} />
+          <ListaItens dia={diaSel} itens={itensDoDia(d, diaSel, { comHabitos: true })} soltas={tarefasSemHora(d, diaSel)} aoVer={aoVer} aoEditar={aoEditar} />
         </section>
       )}
     </div>
+  )
+}
+
+// Janela da atividade tocada: início, término e duração
+function DetalheItem({ it, aoFechar, aoEditar }) {
+  const tipos = { fixo: 'Compromisso fixo', tarefa: 'Tarefa', habito: 'Hábito' }
+  const min = Math.round((it.fim - it.ini) * 60)
+  return (
+    <Modal titulo={it.titulo} subtitulo={`${DIAS[it.dia.getDay()]}, ${it.dia.getDate()} de ${MESES[it.dia.getMonth()]}`} aoFechar={aoFechar}
+      rodape={it.tipo === 'tarefa' && <button type="button" className="btn btn-sec" onClick={() => aoEditar(it.tarefa)}>Editar tarefa</button>}>
+      <div className="detalhe-horario">
+        <div><span className="suave">Início</span><strong>{hhmm(it.ini)}</strong></div>
+        <div><span className="suave">Término</span><strong>{hhmm(it.fim)}</strong></div>
+        <div><span className="suave">Duração</span><strong>{duracao(min)}</strong></div>
+      </div>
+      <p className="detalhe-area"><i style={{ background: it.area.cor }} aria-hidden="true" />{it.area.nome} · {tipos[it.tipo] || 'Atividade'}{it.feito ? ' · feito' : ''}</p>
+    </Modal>
   )
 }
