@@ -7,3 +7,4 @@ Regras dos arquivos:
 - Nome do PDF só com letras, números, ponto, `_` e `-`, direto em `public/arquivos/` (sem subpastas).
 - Os arquivos só abrem para quem está logado: o `worker.js` confere o login antes de entregar.
 - Depois de `git push` na `main`, o Cloudflare publica em cerca de 2 minutos.
+- `listas/espacar.py`: refaz a parte da lista de um PDF "com aula" com mais espaço para responder: linhas nas questões de teoria e quadriculado (5 mm) nas de cálculo. A aula fica igual. Ex.: `python3 ferramentas/listas/espacar.py public/arquivos/Lista_9_...pdf --lista-desde 9 --calculo 3,11,12,13,14,18`. Depois rode o `paginas.sh` e atualize `anexos.paginas` no Supabase. Pedido do Eduardo (21/11): toda lista nova já sai assim.
