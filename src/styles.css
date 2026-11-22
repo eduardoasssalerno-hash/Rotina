@@ -419,6 +419,11 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
   border-radius: 12px; border: 1px solid var(--borda-forte); background: var(--superficie);
 }
 .serie input::placeholder { color: var(--borda-forte); }
+.serie .input-carga { margin-top: 2px; min-height: 44px; font-size: 18px; }
+.regras-plano { margin: 0 0 6px; }
+.regras-plano span { white-space: pre-line; }
+.planos-treino { margin: 2px 0 2px; }
+.planos-treino .chip svg { width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
 .series-botoes { display: flex; gap: 6px; align-self: center; }
 .caixas-ex { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .caixa { background: var(--superficie-2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }

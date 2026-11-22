@@ -11,7 +11,9 @@ export function estadoPlaneta(d, p) {
   const feitas = etapas.filter((t) => t.feita)
   const foco = d.sessoes_foco.filter((s) => s.projeto_id === p.id)
   const minFoco = foco.reduce((s, x) => s + x.minutos, 0)
-  const treinos = p.tipo === 'treino' ? d.treinos.filter((t) => t.concluido) : []
+  // o planeta de treino cresce só com o plano principal (Calistenia)
+  const principal = (d.treino_planos || []).find((x) => x.principal)
+  const treinos = p.tipo === 'treino' ? d.treinos.filter((t) => t.concluido && (!principal || !t.plano_id || t.plano_id === principal.id)) : []
   const energia = p.energia_base + 10 * (p.tipo === 'treino' ? treinos.length : feitas.length) + 15 * Math.floor(minFoco / 25)
   const datas = [
     ...feitas.map((t) => t.feita_em), ...foco.map((s) => s.inicio),

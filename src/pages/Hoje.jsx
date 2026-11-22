@@ -143,16 +143,28 @@ export default function Hoje() {
 function ProximoTreino() {
   const { d } = useDados()
   const blocos = d.blocos_fixos.filter((b) => b.ativo && /treino/i.test(b.titulo))
-  if (!blocos.length) return null
+  // planos da aba Treino com dia e horário (calistenia, perna, preparo do salto...)
+  const planos = (d.treino_planos || []).filter((p) => p.ativo && p.dias.length && p.inicio)
+  if (!blocos.length && !planos.length) return null
   const iso = isoDia(hoje())
   const feitoHoje = d.treinos.some((t) => t.dia === iso && t.concluido)
-  // próximo dia com treino (hoje conta se ainda não treinou)
+  // próximo treino ainda não feito (hoje conta)
   let dia = null
   let bloco = null
-  for (let i = feitoHoje ? 1 : 0; i < 9 && !dia; i++) {
+  for (let i = 0; i < 9 && !dia; i++) {
     const x = addDias(hoje(), i)
-    const b = blocos.find((y) => y.dias.includes(x.getDay()))
-    if (b) { dia = x; bloco = b }
+    const xi = isoDia(x)
+    if (planos.length) {
+      // hoje: o treino que já passou há mais de 2 horas não conta mais
+      const ag = new Date(Date.now() - 2 * 3600000)
+      const limite = i === 0 && ag.getDate() === x.getDate() ? `${String(ag.getHours()).padStart(2, '0')}:${String(ag.getMinutes()).padStart(2, '0')}` : ''
+      const p = planos.filter((y) => y.dias.includes(x.getDay()) && y.inicio.slice(0, 5) >= limite && !d.treinos.some((t) => t.dia === xi && t.plano_id === y.id && t.concluido))
+        .sort((a, b) => a.inicio.localeCompare(b.inicio))[0]
+      if (p) { dia = x; bloco = p }
+    } else if (!(i === 0 && feitoHoje)) {
+      const b = blocos.find((y) => y.dias.includes(x.getDay()))
+      if (b) { dia = x; bloco = b }
+    }
   }
   if (!dia) return null
   const quando = difDias(dia, hoje()) === 0 ? 'hoje' : difDias(dia, hoje()) === 1 ? 'amanhã' : dataCurta(dia)
@@ -161,7 +173,7 @@ function ProximoTreino() {
     <section className="cartao cartao-link">
       <Link to="/treino">
         <div className="cab-cartao"><h2>Treino</h2><span className="link">Abrir</span></div>
-        <p>{feitoHoje ? 'Treino de hoje concluído. ' : ''}Próximo: <strong>{quando}</strong>, às {bloco.inicio.slice(0, 5)}.</p>
+        <p>{feitoHoje ? 'Treino de hoje concluído. ' : ''}Próximo: <strong>{quando}</strong>, às {bloco.inicio.slice(0, 5)}{bloco.nome ? ` · ${bloco.nome}` : ''}.</p>
         {pendente && <p className="aviso-peq">Falta o feedback do treino de {dataCurta(deIso(pendente.dia))}.</p>}
       </Link>
     </section>

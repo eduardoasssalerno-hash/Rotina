@@ -5,6 +5,6 @@ export default function Exercicio({ desenho = 'joelho', largura = 150, nome }) {
   return (
     <div className="desenho-ex" style={{ width: largura, height: Math.round(largura * 2 / 3) }}
       role="img" aria-label={`Desenho animado: ${nome || 'exercício'}`}
-      dangerouslySetInnerHTML={{ __html: EXERCICIOS[desenho] || EXERCICIOS.joelho }} />
+      dangerouslySetInnerHTML={{ __html: EXERCICIOS[desenho] || EXERCICIOS.halter }} />
   )
 }
