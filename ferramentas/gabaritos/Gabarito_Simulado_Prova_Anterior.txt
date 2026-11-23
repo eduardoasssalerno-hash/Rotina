@@ -1,0 +1,31 @@
+GABARITO DO CLAUDE (não é da professora) — Simulado: prova de anos anteriores de Micro II
+Uso só para corrigir. Nunca colocar em public/ nem como anexo.
+
+1. V ou F (1 errada anula 1 certa; em branco = 0)
+ a) F — com externalidade negativa o mercado produz MAIS que o ótimo social.
+ b) F — internalizar reduz a quantidade, mas o preço de equilíbrio SOBE.
+ c) V
+ d) V — impostos igualam o custo marginal de redução entre empresas (custo-efetivo).
+ e) F — regras de transparência reduzem, mas não eliminam o risco moral (ação oculta); o "eliminar completamente" torna falsa.
+
+2. Maria U = 2x + y (substitutos, TMS = 2); Pedro U = min{x, 2y} (x = 2y). Dotações: Maria (10, 0), Pedro (0, 20). Totais: x = 10, y = 20.
+ a) px/py = 2 (Maria precisa aceitar misturar; se px/py > 2 ela só quer y e falta y; se < 2 só quer x e falta x).
+ b) Com py = 1, px = 2: Maria 2x + y = 20; Pedro 2x + y = 20.
+ c) Pedro: x = 2y → 2(2y) + y = 20 → y = 4, x = 8. Maria: x = 10 − 8 = 2, y = 20 − 4 = 16 (2·2 + 16 = 20 ✓).
+ d) Caixa 10 (x) × 20 (y). Inicial: Maria (10, 0) = canto inferior direito na origem dela. Final: Maria (2, 16), Pedro (8, 4). Reta de preços com inclinação −2 passando pelas duas; CI de Maria é reta de inclinação −2 (coincide com a reta), CI de Pedro em L com bico em x = 2y.
+
+3. NovaTec joga primeiro (E ou F); AlfaQuímica responde (C ou K). Payoffs (Alfa, Nova): E-C (5, −4); E-K (6, 3); F-C (5, 1); F-K (5, 2).
+ a) Árvore: NovaTec na raiz; dois nós da AlfaQuímica.
+ b) Se NovaTec entra: Confrontar 5 < Cooperar 6 → coopera. Ameaça de confrontar NÃO é crível.
+ c) NovaTec antecipa: Entrar dá 3; Ficar fora dá 1 ou 2 (Alfa indiferente: 5 = 5). Entra. Equilíbrio (E, K), lucros (6, 3).
+
+4. Demanda: Q = 24 − 0,5P → P = 48 − 2Q. CMgP = 2 + Q (oferta). CMgE = 2 + Q. CMgS = 4 + 2Q.
+ a) Gráfico: demanda de 48 a Q = 24; CMgP de 2 com inclinação 1; CMgE de 2 com inclinação 1; CMgS de 4 com inclinação 2.
+ b) 48 − 2Q = 2 + Q → Q = 46/3 ≈ 15,33; P = 52/3 ≈ 17,33.
+ c) 48 − 2Q = 4 + 2Q → Q* = 11; P* = 26.
+ d) Mercado produz demais (15,33 > 11) a preço baixo demais (17,33 < 26). Peso morto = ½·(46/3 − 11)·(CMgS − P em Q = 46/3) = ½·(13/3)·(104/3 − 52/3) = 338/9 ≈ 37,6. Imposto pigouviano = CMgE em Q* = 13.
+
+5. Brumadinho (avaliar pelo conteúdo).
+ a) Externalidade negativa (danos ambientais e humanos a terceiros não precificados); assimetria de informação entre empresa, certificadoras e poder público (risco moral/ação oculta nos laudos; conflito de interesse); bem público/recurso comum (rio, bacia); falha de fiscalização (falha de governo). Como contribuíram: custo social > privado, subinvestimento em segurança, risco escondido.
+ b) Regulação e padrões (proibir barragem a montante), fiscalização independente e frequente, auditoria sem conflito de interesse, transparência dos laudos, multas e responsabilização civil/criminal, seguro/caução obrigatória, impostos/taxas pigouvianas, plano de emergência.
+ c) Sem internalizar o custo e com informação escondida, a empresa ganha ao cortar custo de segurança (benefício privado, custo social); responsabilidade limitada e baixa chance de punição reduzem o incentivo; punição crível, monitoramento e responsabilidade objetiva aumentam o incentivo.

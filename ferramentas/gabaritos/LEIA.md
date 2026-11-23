@@ -12,3 +12,4 @@ Cada PDF tem um .txt ao lado com o texto extraído (as figuras ficam só no PDF)
 Atenção: a lista que no app se chama "Lista 6" (jogos repetidos e sequenciais) tem, no arquivo da professora, o título
 "Lista 7 – Teoria dos Jogos: Jogos Repetidos, Sequenciais e com Barreiras". O gabarito oficial dela ainda não chegou.
 Ainda falta também o gabarito da Lista 9.
+- `Gabarito_Simulado_Prova_Anterior.txt`: gabarito feito pelo Claude (não é da professora) do simulado da prova de anos anteriores (23/11/2026).
