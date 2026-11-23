@@ -737,3 +737,6 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .btn-etapas { display: inline-flex; align-items: center; gap: 3px; border: 1px solid var(--borda); background: var(--superficie); color: var(--suave); border-radius: 999px; padding: 2px 8px; min-height: 28px; font-size: 12.5px; font-weight: 700; cursor: pointer; flex: none; }
 .btn-etapas.tem { color: var(--acento); border-color: color-mix(in srgb, var(--acento) 40%, var(--borda)); }
 @media (max-width: 600px) { .item-dia .todos-linha { padding-left: 16px; } .subtarefas { margin-left: 22px; } }
+.todo-acoes { display: flex; gap: 16px; align-items: center; }
+.btn-todo.suave { color: var(--suave); font-weight: 600; }
+.lista-modelos { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0 8px; }

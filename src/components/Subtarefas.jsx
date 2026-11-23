@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
-import { Icone } from './ui.jsx'
+import { Icone, useToast } from './ui.jsx'
 
 export const subtarefasDe = (d, tarefaId) => d.subtarefas.filter((s) => s.tarefa_id === tarefaId).sort((a, b) => a.ordem - b.ordem)
 
@@ -8,6 +8,8 @@ export const subtarefasDe = (d, tarefaId) => d.subtarefas.filter((s) => s.tarefa
 // desmarcar uma etapa reabre a tarefa.
 export default function Subtarefas({ tarefa, abrirNovo = false }) {
   const { d, salvar, apagar } = useDados()
+  const toast = useToast()
+  const modelo = d.modelos_todo.find((m) => m.titulo === tarefa.titulo)
   const lista = subtarefasDe(d, tarefa.id)
   const [novo, setNovo] = useState(abrirNovo)
   const [texto, setTexto] = useState('')
@@ -31,6 +33,15 @@ export default function Subtarefas({ tarefa, abrirNovo = false }) {
     if (tarefa.feita) await salvar('tarefas', { id: tarefa.id, feita: false, feita_em: null })
   }
 
+  // guarda o título e as etapas para usar de novo em outro dia (+ modelo)
+  async function salvarModelo() {
+    const etapas = lista.map((s) => s.titulo)
+    const ok = modelo
+      ? await salvar('modelos_todo', { id: modelo.id, etapas })
+      : await salvar('modelos_todo', { titulo: tarefa.titulo.slice(0, 160), etapas })
+    if (ok) toast(`Modelo "${tarefa.titulo}" ${modelo ? 'atualizado' : 'salvo'}: use em "+ modelo" dentro do bloco`)
+  }
+
   return (
     <div className="subtarefas">
       {lista.map((s, i) => (
@@ -51,7 +62,14 @@ export default function Subtarefas({ tarefa, abrirNovo = false }) {
           <button type="submit" className="btn btn-primario btn-peq" disabled={!texto.trim()}>Pôr</button>
         </form>
       ) : (
-        <button type="button" className="btn-texto btn-todo" onClick={() => setNovo(true)}>+ etapa</button>
+        <div className="todo-acoes">
+          <button type="button" className="btn-texto btn-todo" onClick={() => setNovo(true)}>+ etapa</button>
+          {lista.length > 0 && (
+            <button type="button" className="btn-texto btn-todo suave" onClick={salvarModelo}>
+              {modelo ? 'atualizar modelo' : 'salvar como modelo'}
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

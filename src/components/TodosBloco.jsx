@@ -15,10 +15,20 @@ export default function TodosBloco({ bloco, iso, aoEditar, aberto, aoAbrir, aoFe
   const abrir = () => (controlado ? aoAbrir?.() : setAbertoLocal(true))
   const fechar = () => (controlado ? aoFechar?.() : setAbertoLocal(false))
   const [texto, setTexto] = useState('')
+  const [modelosAbertos, setModelosAbertos] = useState(false)
   const [etapasAbertas, setEtapasAbertas] = useState({}) // to-do → etapas visíveis (padrão: abertas se ainda não terminou)
   const campo = useRef(null)
   const lista = todosDoBloco(d, bloco.id, iso)
   useEffect(() => { if (abrindo) campo.current?.focus() }, [abrindo])
+
+  // cria o to-do já com as etapas do modelo
+  async function usarModelo(m) {
+    setModelosAbertos(false)
+    const t = await salvar('tarefas', { titulo: m.titulo, bloco_id: bloco.id, area_id: bloco.area_id, dia: iso, ordem: lista.length })
+    if (!t) return
+    for (let i = 0; i < m.etapas.length; i++) await salvar('subtarefas', { tarefa_id: t.id, titulo: m.etapas[i], ordem: i })
+    setEtapasAbertas((x) => ({ ...x, [t.id]: true }))
+  }
 
   async function adicionar(e) {
     e.preventDefault()
@@ -62,7 +72,17 @@ export default function TodosBloco({ bloco, iso, aoEditar, aberto, aoAbrir, aoFe
           <button type="submit" className="btn btn-primario btn-peq" disabled={!texto.trim()}>Pôr</button>
         </form>
       ) : (
-        <button type="button" className="btn-texto btn-todo" onClick={abrir}>+ to-do</button>
+        <div className="todo-acoes">
+          <button type="button" className="btn-texto btn-todo" onClick={abrir}>+ to-do</button>
+          {d.modelos_todo.length > 0 && <button type="button" className="btn-texto btn-todo" aria-expanded={modelosAbertos} onClick={() => setModelosAbertos(!modelosAbertos)}>+ modelo</button>}
+        </div>
+      )}
+      {modelosAbertos && (
+        <div className="lista-modelos" role="menu">
+          {[...d.modelos_todo].sort((a, b) => a.titulo.localeCompare(b.titulo)).map((m) => (
+            <button key={m.id} type="button" role="menuitem" className="chip" onClick={() => usarModelo(m)}>{m.titulo} · {m.etapas.length} etapas</button>
+          ))}
+        </div>
       )}
     </div>
   )
