@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useDados } from '../lib/dados.jsx'
 import { useSessao } from '../lib/sessao.jsx'
 import { Link } from '../lib/router.jsx'
-import { folgaEm, itensDoDia, tarefasSemHora } from '../lib/agenda.js'
+import { folgaEm, itensDoDia, tarefasSemHora, todosDoBloco } from '../lib/agenda.js'
 import { estadoPlaneta } from '../lib/planetas.js'
 import { ehBlocoTreino, marcarTreino } from '../lib/treinoHabito.js'
 import { addDias, dataCurta, dataLonga, deIso, difDias, hhmm, hoje, isoDia, saudacao } from '../lib/util.js'
@@ -33,6 +33,7 @@ export default function Hoje() {
   const agora = useAgora()
   // Diário: dá para voltar aos dias anteriores e também ver os próximos dias (até 1 ano)
   const [volta, setVolta] = useState(0) // 0 = hoje, 1 = ontem, -1 = amanhã ...
+  const [todoAberto, setTodoAberto] = useState(null) // bloco com a caixa de to-do aberta
   const dia = addDias(hoje(), -volta)
   const iso = isoDia(dia)
   const ehHoje = volta === 0
@@ -95,14 +96,25 @@ export default function Hoje() {
                   <div className="item-textos">
                     {it.tipo === 'tarefa'
                       ? <button type="button" className="link-titulo" onClick={() => setEditando(it.tarefa)}>{it.titulo}</button>
-                      : <strong>{it.titulo}</strong>}
-                    <span className="suave">{detalhe.join(' · ')}{agoraAqui ? ' · agora' : ''}</span>
+                      : !it.area.privada
+                        ? <button type="button" className="link-titulo" aria-expanded={todoAberto === it.chave} onClick={() => setTodoAberto(todoAberto === it.chave ? null : it.chave)}>{it.titulo}</button>
+                        : <strong>{it.titulo}</strong>}
+                    <span className="suave">{detalhe.join(' · ')}{agoraAqui ? ' · agora' : ''}{(() => {
+                      if (it.tipo !== 'fixo' || it.area.privada) return ''
+                      const t = todosDoBloco(d, it.bloco.id, iso)
+                      return t.length ? ` · ${t.filter((x) => x.feita).length}/${t.length} to-dos` : ''
+                    })()}</span>
                     {it.tipo === 'tarefa' && <span className="linha-extras"><Feedback tarefa={it.tarefa} /><Anexos tarefaId={it.tarefa.id} /></span>}
-                    {it.tipo === 'fixo' && !it.area.privada && <TodosBloco bloco={it.bloco} iso={iso} aoEditar={setEditando} />}
                   </div>
                   <button type="button" className={`btn-feito ${it.feito ? 'sim' : ''}`} aria-pressed={it.feito} onClick={() => alternar(it)}>
                     {it.feito ? <><Icone nome="check" tamanho={16} />Feito</> : 'Feito'}
                   </button>
+                  {it.tipo === 'fixo' && !it.area.privada && (
+                    <div className="todos-linha">
+                      <TodosBloco bloco={it.bloco} iso={iso} aoEditar={setEditando}
+                        aberto={todoAberto === it.chave} aoAbrir={() => setTodoAberto(it.chave)} aoFechar={() => setTodoAberto((x) => (x === it.chave ? null : x))} />
+                    </div>
+                  )}
                 </div>
               )
             })}

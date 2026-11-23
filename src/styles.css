@@ -720,3 +720,8 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .universo-cartao .segmentos { flex-wrap: wrap; justify-content: center; }
 .universo .cristo-halo, .universo .cristo rect { pointer-events: none; }
 .acoes-invest { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+
+/* to-dos do bloco ocupam a largura toda, embaixo do horário */
+.item-dia { flex-wrap: wrap; }
+.item-dia .todos-linha { flex-basis: 100%; padding-left: 70px; margin-top: -6px; }
+.item-dia .faixa { align-self: stretch; }
