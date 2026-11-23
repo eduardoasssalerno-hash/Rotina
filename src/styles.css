@@ -725,3 +725,15 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .item-dia { flex-wrap: wrap; }
 .item-dia .todos-linha { flex-basis: 100%; padding-left: 70px; margin-top: -6px; }
 .item-dia .faixa { align-self: stretch; }
+
+/* etapas (checklist) dentro de um to-do */
+.todo-bloco-item { display: flex; flex-direction: column; }
+.subtarefas { display: flex; flex-direction: column; margin: -2px 0 6px 28px; padding-left: 12px; border-left: 2px solid var(--linha); }
+.subtarefa { display: flex; align-items: center; gap: 6px; }
+.subtarefa .todo-check { min-height: 34px; font-size: 14px; font-weight: 500; }
+.subtarefa .todo-check input { width: 17px; height: 17px; }
+.subtarefa.feita .todo-check span { text-decoration: line-through; color: var(--suave); }
+.num-etapa { font-style: normal; color: var(--suave); font-variant-numeric: tabular-nums; }
+.btn-etapas { display: inline-flex; align-items: center; gap: 3px; border: 1px solid var(--borda); background: var(--superficie); color: var(--suave); border-radius: 999px; padding: 2px 8px; min-height: 28px; font-size: 12.5px; font-weight: 700; cursor: pointer; flex: none; }
+.btn-etapas.tem { color: var(--acento); border-color: color-mix(in srgb, var(--acento) 40%, var(--borda)); }
+@media (max-width: 600px) { .item-dia .todos-linha { padding-left: 16px; } .subtarefas { margin-left: 22px; } }

@@ -3,6 +3,7 @@ import { useDados } from '../lib/dados.jsx'
 import { todosDoBloco } from '../lib/agenda.js'
 import { alternarTarefa } from './LinhaTarefa.jsx'
 import { Icone } from './ui.jsx'
+import Subtarefas, { subtarefasDe } from './Subtarefas.jsx'
 
 // Lista de to-dos dentro de um bloco do dia (Aulas, Estágio...).
 // Tocar no nome do bloco abre a caixa; depois de pôr um to-do, a caixa continua aberta para o próximo.
@@ -14,6 +15,7 @@ export default function TodosBloco({ bloco, iso, aoEditar, aberto, aoAbrir, aoFe
   const abrir = () => (controlado ? aoAbrir?.() : setAbertoLocal(true))
   const fechar = () => (controlado ? aoFechar?.() : setAbertoLocal(false))
   const [texto, setTexto] = useState('')
+  const [etapasAbertas, setEtapasAbertas] = useState({}) // to-do → etapas visíveis (padrão: abertas se ainda não terminou)
   const campo = useRef(null)
   const lista = todosDoBloco(d, bloco.id, iso)
   useEffect(() => { if (abrindo) campo.current?.focus() }, [abrindo])
@@ -29,15 +31,29 @@ export default function TodosBloco({ bloco, iso, aoEditar, aberto, aoAbrir, aoFe
 
   return (
     <div className="todos-bloco">
-      {lista.map((t) => (
-        <div key={t.id} className={`todo ${t.feita ? 'feita' : ''}`}>
-          <label className="todo-check">
-            <input type="checkbox" checked={t.feita} onChange={() => alternarTarefa(salvar, t)} />
-            <span>{t.titulo}</span>
-          </label>
-          <button type="button" className="btn-icone btn-mini" onClick={() => aoEditar(t)} aria-label={`Editar ${t.titulo}`}><Icone nome="editar" tamanho={15} /></button>
-        </div>
-      ))}
+      {lista.map((t) => {
+        const etapas = subtarefasDe(d, t.id)
+        const feitas = etapas.filter((s) => s.feita).length
+        const aberta = etapasAbertas[t.id] ?? etapas.length > 0
+        return (
+          <div key={t.id} className="todo-bloco-item">
+            <div className={`todo ${t.feita ? 'feita' : ''}`}>
+              <label className="todo-check">
+                <input type="checkbox" checked={t.feita} onChange={() => alternarTarefa(salvar, t)} />
+                <span>{t.titulo}</span>
+              </label>
+              <button type="button" className={`btn-etapas ${etapas.length ? 'tem' : ''}`} aria-expanded={aberta}
+                aria-label={etapas.length ? `Etapas de ${t.titulo}: ${feitas} de ${etapas.length}` : `Pôr etapas em ${t.titulo}`}
+                onClick={() => setEtapasAbertas((x) => ({ ...x, [t.id]: !aberta }))}>
+                {etapas.length ? `${feitas}/${etapas.length}` : <Icone nome="mais" tamanho={14} />}
+                <Icone nome={aberta ? 'cima' : 'baixo'} tamanho={13} />
+              </button>
+              <button type="button" className="btn-icone btn-mini" onClick={() => aoEditar(t)} aria-label={`Editar ${t.titulo}`}><Icone nome="editar" tamanho={15} /></button>
+            </div>
+            {aberta && <Subtarefas tarefa={t} abrirNovo={etapas.length === 0} />}
+          </div>
+        )
+      })}
       {abrindo ? (
         <form className="todo-novo" onSubmit={adicionar}>
           <input ref={campo} type="text" value={texto} maxLength={160} placeholder={`O que fazer em ${bloco.titulo}?`}

@@ -4,7 +4,7 @@ import { addDias, hoje, isoDia, msgErro } from './util.js'
 
 // Todos os dados da Ione ficam carregados na memória (é um app de uma pessoa só)
 const TABELAS = ['areas', 'projetos', 'tarefas', 'blocos_fixos', 'blocos_feitos', 'folgas',
-  'habitos', 'habito_marcas', 'treino_planos', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco', 'anexos', 'metas', 'categorias', 'lancamentos', 'conexoes', 'contas', 'regras_categoria', 'investimentos', 'investimento_historico', 'ajustes', 'operacoes_bolsa', 'cotacoes']
+  'habitos', 'habito_marcas', 'treino_planos', 'exercicios', 'treinos', 'treino_series', 'sessoes_foco', 'anexos', 'metas', 'categorias', 'lancamentos', 'conexoes', 'contas', 'regras_categoria', 'investimentos', 'investimento_historico', 'ajustes', 'operacoes_bolsa', 'cotacoes', 'subtarefas']
 // Tabelas com muitas linhas: só o último ano
 // sessoes_foco vem inteira: a aba Planetas mostra os anos anteriores (inclusive o histórico do Forest)
 const COM_DIA = { blocos_feitos: 'dia', habito_marcas: 'dia', lancamentos: 'dia', investimento_historico: 'dia' }
