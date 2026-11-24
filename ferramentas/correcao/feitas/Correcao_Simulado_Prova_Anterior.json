@@ -1,0 +1,51 @@
+{
+  "tarefa_id": null,
+  "arquivo": "Correcao_Simulado_Prova_Anterior",
+  "atividade": "Simulado - prova de anos anteriores",
+  "materia": "Microeconomia II",
+  "data": "24/11/2026",
+  "nota": 6.7,
+  "nota_portugues": 7,
+  "minutos_real": null,
+  "nota_tempo": "Prova de 10 pontos (5 questões de 2 pontos). Gabarito feito pelo Claude. O item 4d ficou em branco e, a pedido do Eduardo, recebeu a nota máxima (ele disse que sabia e não escreveu). A questão 2 foi feita depois da explicação do Claude no chat. Sem a nota máxima no 4d, o total seria 6,2.",
+  "bem": "Jogo sequencial (questão 3): perfeita, com árvore certa e ameaça não crível bem justificada. Contas da externalidade (4b e 4c) e da troca com min e substitutos perfeitos (2b, 2c e a caixa de Edgeworth). Cálculo foi o seu ponto forte: 9,2.",
+  "mal": "V ou F da questão 1 (zerou): externalidade negativa produz MAIS, internalizar faz o preço SUBIR e transparência não elimina a ação oculta; na dúvida, deixar em branco. Na 2a, TMS = px/py (a razão é 2, não 1/2). Na 4a, CMgP é a oferta e a CMgS tem inclinação 2. Na 5, citar as falhas pelo nome.",
+  "questoes": [
+    {"numero": "1", "status": "errado", "tipo": "teoria", "valor": 0.0, "pontos": "0 de 2",
+     "enunciado": "V ou F sobre as formas de corrigir falhas de mercado (1 errada anula 1 certa).",
+     "sua_resposta": "a) F; b) V; c) em branco; d) em branco; e) V.",
+     "comentario": "Acertou a (F) e errou b e e: 1 certa − 2 erradas = 0. Palavras como \"sempre\" e \"eliminar completamente\" costumam deixar a frase falsa. Na dúvida, deixe em branco.",
+     "resolucao": "a) F: com externalidade negativa o mercado produz MAIS que o ótimo.\nb) F: internalizar reduz a quantidade, mas o preço SOBE.\nc) V: as permissões dependem de o governo acertar o total.\nd) V: com imposto, quem reduz barato reduz mais (menor custo total).\ne) F: a transparência reduz, mas não elimina, a ação oculta (risco moral)."},
+    {"numero": "2", "status": "certo", "tipo": "calculo", "valor": 0.825, "pontos": "1,65 de 2",
+     "enunciado": "Maria U = 2x + y, dotação (10, 0); Pedro U = min{x, 2y}, dotação (0, 20). a) razão de preços; b) restrições; c) cestas; d) caixa de Edgeworth.",
+     "sua_resposta": "a) TMS = 2, mas escreveu px/py = 1/2. b) px = 2, py = 1; Maria e Pedro com 2x + y = 20. c) Pedro (8, 4) e Maria (2, 16). d) Caixa 10 × 20, inicial no canto inferior direito, diagonal e ponto final.",
+     "comentario": "b, c e d certos. a) A justificativa está certa, mas a razão ficou invertida: TMS = px/py, então px/py = 2 (você mesmo usou px = 2 e py = 1 no item b). Na d, faltou a curva em L do Pedro. Feita depois da explicação no chat.",
+     "resolucao": "a) px/py = TMS da Maria = 2.\nd) A reta de preços (inclinação −2) é a diagonal da caixa, de (10, 0) até (0, 20). Final: Maria (2, 16), Pedro (8, 4), com o bico do L do Pedro nesse ponto."},
+    {"numero": "3", "status": "certo", "tipo": "calculo", "valor": 1.0, "pontos": "2 de 2",
+     "enunciado": "AlfaQuímica (C ou K) × NovaTec (E ou F); a NovaTec joga primeiro. a) forma extensiva; b) a ameaça de confrontar é crível? c) a NovaTec deve entrar?",
+     "sua_resposta": "a) Árvore com a NovaTec na raiz e os lucros certos. b) Não: cooperando, a AlfaQuímica lucra mais. c) Deve entrar, porque sabe que a AlfaQuímica vai cooperar.",
+     "comentario": "Perfeita. Para a prova, escreva os números: se a NovaTec entra, C dá 5 e K dá 6 → coopera; entrando ela ganha 3, fora ganharia 1 ou 2. Equilíbrio (E, K), lucros (6, 3)."},
+    {"numero": "4", "status": "certo", "tipo": "calculo", "valor": 0.925, "pontos": "1,85 de 2",
+     "enunciado": "Demanda Q = 24 − 0,5P; CMgP = 2 + Q; CMgE = 2 + Q. a) gráfico; b) equilíbrio sem correção; c) ótimo social; d) comparação.",
+     "sua_resposta": "a) Gráfico com demanda (48 a 24), oferta, CMgE e CMgS = 4 + 2Q; escreveu \"CMgP = demanda\". b) Q = 46/3 ≈ 15, P = 52/3 ≈ 17. c) Q = 11, P = 26. d) Em branco (nota máxima a pedido).",
+     "comentario": "b e c certos. a) CMgP é a OFERTA (a demanda é a reta que desce). A CMgS tem inclinação 2: sobe mais rápido e chega a 52 em Q = 24. Marque os pontos do mercado (15,3; 17,3) e do ótimo (11; 26).",
+     "resolucao": "d) Sem correção, o mercado produz mais (15,3 > 11) a um preço menor (17,3 < 26), porque não paga o dano: há peso morto ≈ 37,6. Imposto de Pigou = CMgE no ótimo = 13 por tonelada."},
+    {"numero": "5", "status": "parcial", "tipo": "teoria", "valor": 0.6, "pontos": "1,2 de 2",
+     "enunciado": "Brumadinho: a) falhas de mercado; b) como o Estado deve atuar; c) efeito nos incentivos das empresas.",
+     "sua_resposta": "a) Externalidades socioambientais (poluição) mascaradas pela assimetria de informação. b) Impostos sobre a poluição e fiscalização mais acirrada e anônima. c) As falhas geram custos menores que os devidos, então não há incentivo para reduzir as externalidades.",
+     "comentario": "Ideias certas, mas curtas. Cite as falhas pelo nome e dê mais instrumentos.",
+     "resolucao": "a) Externalidade negativa; assimetria de informação com risco moral (ação oculta nos laudos); conflito de interesse das certificadoras; rio como bem público / recurso comum; falha de fiscalização.\nb) Regulação e padrões (proibir barragem a montante), fiscalização independente, laudos públicos, responsabilização civil e criminal, seguro ou caução obrigatória, imposto pigouviano.\nc) Sem pagar o custo social e com baixa chance de punição, economizar em segurança dá lucro à empresa e prejuízo à sociedade; punição crível e monitoramento aumentam o incentivo."}
+  ],
+  "portugues": [
+    {"trecho": "Não uma vez que seus lucros são no máximo iguais", "correcao": "Não, uma vez que os lucros dela são, no máximo, iguais", "explicacao": "Vírgula depois do “Não” e antes de “uma vez que” (o mesmo vale em “Deve, uma vez que…” na 3c)."},
+    {"trecho": "A falha de mercado maior, provavelmente foram externalidades", "correcao": "A maior falha de mercado provavelmente foi a externalidade", "explicacao": "Concordância: “a falha… foi”. E não separe o sujeito do verbo com vírgula."},
+    {"trecho": "E fiscalização mais acirrada e de forma anônima talvez, para evitar corrupção", "correcao": "Também pode fazer uma fiscalização mais rigorosa, talvez anônima, para evitar a corrupção.", "explicacao": "A frase original não tem verbo. “Acirrada” é para disputa; para fiscalização, use “rigorosa”."},
+    {"trecho": "As falhas de mercado se não combatidas geram custos", "correcao": "As falhas de mercado, se não combatidas, geram custos", "explicacao": "Expressão intercalada vai entre vírgulas."}
+  ],
+  "proximos_passos": [
+    "V ou F: decorar as 3 frases da aula de externalidades (negativa produz mais; internalizar sobe o preço; imposto custa menos que padrão).",
+    "TMS = px/py: confira a direção antes de escrever a razão.",
+    "Gráfico de externalidade: CMgP = oferta; CMgS = CMgP + CMgE, mais inclinada; marcar os dois pontos.",
+    "Questões discursivas: citar as falhas pelo nome (externalidade, risco moral, assimetria, bem público)."
+  ]
+}
