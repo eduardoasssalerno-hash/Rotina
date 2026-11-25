@@ -52,6 +52,10 @@ export default function TodosBloco({ bloco, iso, aoEditar, aberto, aoAbrir, aoFe
                 <input type="checkbox" checked={t.feita} onChange={() => alternarTarefa(salvar, t)} />
                 <span>{t.titulo}</span>
               </label>
+              {t.todo_fixo_id && d.todos_fixos.some((f) => f.id === t.todo_fixo_id && f.ativo) && (
+                <button type="button" className="selo-diario" title="Aparece todo dia neste bloco. Tocar para parar de repetir."
+                  onClick={() => { if (window.confirm(`Parar de repetir "${t.titulo}" todo dia? O de hoje continua.`)) salvar('todos_fixos', { id: t.todo_fixo_id, ativo: false }) }}>↻ diário</button>
+              )}
               <button type="button" className={`btn-etapas ${etapas.length ? 'tem' : ''}`} aria-expanded={aberta}
                 aria-label={etapas.length ? `Etapas de ${t.titulo}: ${feitas} de ${etapas.length}` : `Pôr etapas em ${t.titulo}`}
                 onClick={() => setEtapasAbertas((x) => ({ ...x, [t.id]: !aberta }))}>
@@ -59,6 +63,15 @@ export default function TodosBloco({ bloco, iso, aoEditar, aberto, aoAbrir, aoFe
                 <Icone nome={aberta ? 'cima' : 'baixo'} tamanho={13} />
               </button>
               <button type="button" className="btn-icone btn-mini" onClick={() => aoEditar(t)} aria-label={`Editar ${t.titulo}`}><Icone nome="editar" tamanho={15} /></button>
+              {!t.todo_fixo_id && (
+                <button type="button" className="btn-icone btn-mini" aria-label={`Repetir ${t.titulo} todo dia`} title="Repetir todo dia neste bloco"
+                  onClick={async () => {
+                    if (!window.confirm(`Repetir "${t.titulo}" todo dia em ${bloco.titulo}?`)) return
+                    const m = d.modelos_todo.find((x) => x.titulo === t.titulo)
+                    const f = await salvar('todos_fixos', { bloco_id: bloco.id, titulo: t.titulo, modelo_id: m?.id || null, ordem: t.ordem ?? 0, desde: iso })
+                    if (f) await salvar('tarefas', { id: t.id, todo_fixo_id: f.id })
+                  }}>↻</button>
+              )}
             </div>
             {aberta && <Subtarefas tarefa={t} abrirNovo={etapas.length === 0} />}
           </div>

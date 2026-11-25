@@ -13,6 +13,7 @@ import Habitos from '../components/Habitos.jsx'
 import Planeta from '../components/Planeta.jsx'
 import Anexos from '../components/Anexos.jsx'
 import TodosBloco from '../components/TodosBloco.jsx'
+import { useTodosFixos } from '../lib/todosFixos.js'
 import Feedback from '../components/Feedback.jsx'
 import { Cabecalho } from './Shell.jsx'
 
@@ -37,6 +38,7 @@ export default function Hoje() {
   const dia = addDias(hoje(), -volta)
   const iso = isoDia(dia)
   const ehHoje = volta === 0
+  useTodosFixos(dados, dia) // to-dos diários dos blocos (ex.: Estágio)
   const limite = isoDia(addDias(hoje(), -399)) // os dados carregados vão até 400 dias atrás
   function irPara(valor) {
     if (!valor) return
