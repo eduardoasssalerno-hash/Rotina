@@ -16,7 +16,7 @@ const grupoDe = (i) => (ehTesouro(i) ? 'Tesouro Direto' : nomeTipo(i.tipo))
 const pct = (v) => `${v >= 0 ? '+' : ''}${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 
 export default function Investimentos() {
-  const { d } = useDados()
+  const { d, salvar } = useDados()
   const [novoRF, setNovoRF] = useState(null) // {} = novo; investimento = editar
   const [novaOp, setNovaOp] = useState(false)
   const { atualizar, rodando } = useAtualizarInvest()
@@ -43,7 +43,9 @@ export default function Investimentos() {
     </>
   )
   // posições zeradas (CDB já resgatado) não aparecem
-  const ativos = d.investimentos.filter((i) => i.ativo && Number(i.saldo) > 0)
+  // o que está marcado como AP (ex.: caixinha com o dinheiro das contas da mãe) fica fora do patrimônio
+  const ativos = d.investimentos.filter((i) => i.ativo && Number(i.saldo) > 0 && i.grupo !== 'mae')
+  const doAp = d.investimentos.filter((i) => i.ativo && Number(i.saldo) > 0 && i.grupo === 'mae')
   const total = ativos.reduce((s, i) => s + Number(i.saldo || 0), 0)
   const aplicado = ativos.reduce((s, i) => s + Number(i.aplicado ?? i.saldo ?? 0), 0)
   const ganho = total - aplicado
@@ -66,6 +68,20 @@ export default function Investimentos() {
         <div className="cartao"><span className="suave">Total aplicado</span><strong>{reais(aplicado)}</strong></div>
         <div className="cartao"><span className="suave">Rendeu</span><strong className={ganho < 0 ? 'valor-negativo' : 'valor-entrada'}>{reais(ganho)}{aplicado > 0 ? ` (${pct(ganho / aplicado)})` : ''}</strong></div>
       </div>
+      {doAp.length > 0 && (
+        <section className="cartao">
+          <div className="cab-cartao"><h2>Guardado para o AP</h2><span className="suave">{reais(doAp.reduce((s, i) => s + Number(i.saldo), 0))} · fora do seu patrimônio</span></div>
+          {doAp.map((i) => (
+            <div key={i.id} className="investimento">
+              <div className="investimento-textos"><strong>{i.nome}</strong><span className="suave">{i.instituicao}</span></div>
+              <div className="investimento-valores">
+                <strong>{reais(i.saldo)}</strong>
+                <button type="button" className="btn-texto" onClick={() => salvar('investimentos', { id: i.id, grupo: null })}>não é do AP</button>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
       <Evolucao />
       <Rendimentos />
       <div className="grade-hoje">
@@ -84,6 +100,7 @@ export default function Investimentos() {
                   <div className="investimento-valores">
                     <strong>{reais(i.saldo)}</strong>
                     {i.aplicado != null && <span className={r < 0 ? 'valor-negativo' : 'valor-entrada'}>{pct(r)}</span>}
+                    <button type="button" className="btn-texto btn-ap" title="Este investimento guarda dinheiro do AP" onClick={() => salvar('investimentos', { id: i.id, grupo: 'mae' })}>é do AP</button>
                   </div>
                 </div>
               )
@@ -103,7 +120,8 @@ function Evolucao() {
   const { d } = useDados()
   const [foco, setFoco] = useState(null)
   const porDia = new Map()
-  for (const h of d.investimento_historico) porDia.set(h.dia, (porDia.get(h.dia) || 0) + Number(h.saldo))
+  const foraAp = new Set(d.investimentos.filter((i) => i.grupo === 'mae').map((i) => i.id))
+  for (const h of d.investimento_historico) if (!foraAp.has(h.investimento_id)) porDia.set(h.dia, (porDia.get(h.dia) || 0) + Number(h.saldo))
   const pontos = [...porDia.entries()].sort((a, b) => a[0].localeCompare(b[0]))
   if (pontos.length < 2) {
     return <div className="cartao"><div className="cab-cartao"><h2>Evolução do patrimônio</h2></div><Vazio>O gráfico aparece a partir do segundo dia de atualização.</Vazio></div>

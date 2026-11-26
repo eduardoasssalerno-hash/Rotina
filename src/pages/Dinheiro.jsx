@@ -69,6 +69,9 @@ export default function Dinheiro() {
   const contasCorrente = d.contas.filter((c) => c.tipo === 'corrente' && /nubank/i.test(c.banco || ''))
   const naConta = contasCorrente.reduce((t, c) => t + Number(c.saldo || 0), 0)
   const faltaAp = Math.max(0, Math.round(resumoMae(d.lancamentos, d.ajustes[0]?.ap_desde || null).reduce((t, m) => t + m.falta, 0) * 100) / 100)
+  // dinheiro do AP que já foi separado num investimento (ex.: caixinha marcada como AP)
+  const guardadoAp = d.investimentos.filter((i) => i.ativo && i.grupo === 'mae').reduce((t, i) => t + Number(i.saldo || 0), 0)
+  const apNaConta = Math.max(0, Math.round((faltaAp - guardadoAp) * 100) / 100)
   const atualizadoContas = contasCorrente.map((c) => c.atualizado_em).filter(Boolean).sort().pop()
   const gastos = Math.max(0, contam.filter((l) => l.tipo === 'gasto').reduce((s, l) => s + Number(l.valor), 0) - reembolsos)
   const saldo = entradas - gastos
@@ -157,8 +160,11 @@ export default function Dinheiro() {
           {faltaAp > 0 && (
             <div className="saldo-conta-seu">
               <span className="suave">Seu, tirando o AP</span>
-              <strong className="valor-entrada">{reais(naConta - faltaAp)}</strong>
-              <span className="suave mini">{reais(faltaAp)} ainda é do AP</span>
+              <strong className="valor-entrada">{reais(naConta - apNaConta)}</strong>
+              <span className="suave mini">
+                {apNaConta > 0 ? `${reais(apNaConta)} na conta ainda é do AP` : 'nada do AP na conta'}
+                {guardadoAp > 0 ? ` · ${reais(Math.min(guardadoAp, faltaAp))} do AP guardado na caixinha` : ''}
+              </span>
             </div>
           )}
         </div>

@@ -27,6 +27,7 @@ export default function Mae() {
   const atual = meses.find((m) => m.k === chave(hoje())) || meses[0]
   // somando todos os meses: o que passou de um mês compensa o que faltou em outro
   const acumulado = Math.round(meses.reduce((s, m) => s + m.falta, 0) * 100) / 100
+  const guardado = d.investimentos.filter((i) => i.ativo && i.grupo === 'mae').reduce((t, i) => t + Number(i.saldo || 0), 0)
   const desdeTexto = meses.length ? nomeMes(meses[meses.length - 1].k).replace(/ de \d+$/, '') : ''
   if (!meses.length) {
     return <div className="cartao"><Vazio>Nada no AP ainda. Em qualquer lançamento, marque "AP" para ele sair das suas finanças e entrar aqui.</Vazio></div>
@@ -39,6 +40,7 @@ export default function Mae() {
           {atual.falta > 0
             ? <><strong>Falta pagar no AP: {reais(atual.falta)}</strong><span className="suave">Pró-labore (sem os seus R$ 500) {reais(atual.recebido)} · contas já pagas {reais(atual.pago)}</span></>
             : <><strong>Tudo pago este mês{atual.falta < 0 ? ` (você pagou ${reais(-atual.falta)} a mais)` : ''}</strong><span className="suave">Pró-labore (sem os seus R$ 500) {reais(atual.recebido)} · contas pagas {reais(atual.pago)}</span></>}
+          {guardado > 0 && <span className="mae-acumulado">Guardado na caixinha do AP: {reais(guardado)}{acumulado > guardado ? ` · falta separar ${reais(acumulado - guardado)}` : ' · já está tudo separado'}</span>}
           {meses.length > 1 && <span className="mae-acumulado">Somando desde {desdeTexto}: {acumulado > 0 ? `falta ${reais(acumulado)}` : acumulado < 0 ? `você pagou ${reais(-acumulado)} a mais` : 'tudo certo'}</span>}
         </section>
       )}
