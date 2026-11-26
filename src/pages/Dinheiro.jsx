@@ -65,6 +65,12 @@ export default function Dinheiro() {
   const reembolsos = contam.filter((l) => l.tipo === 'entrada' && idReemb.has(l.categoria_id)).reduce((s, l) => s + Number(l.valor), 0)
   const entradas = contam.filter((l) => l.tipo === 'entrada' && !idReemb.has(l.categoria_id)).reduce((s, l) => s + Number(l.valor), 0) + parteMinha
   const maeMes = resumoMae(doMes, d.ajustes[0]?.ap_desde || null)[0]
+  // dinheiro parado nas contas hoje (saldo que o banco mandou) e quanto disso ainda é do AP
+  const contasCorrente = d.contas.filter((c) => c.tipo === 'corrente')
+  const naConta = contasCorrente.reduce((t, c) => t + Number(c.saldo || 0), 0)
+  const porBanco = [...contasCorrente.reduce((m, c) => m.set(c.banco, (m.get(c.banco) || 0) + Number(c.saldo || 0)), new Map())]
+  const faltaAp = Math.max(0, Math.round(resumoMae(d.lancamentos, d.ajustes[0]?.ap_desde || null).reduce((t, m) => t + m.falta, 0) * 100) / 100)
+  const atualizadoContas = contasCorrente.map((c) => c.atualizado_em).filter(Boolean).sort().pop()
   const gastos = Math.max(0, contam.filter((l) => l.tipo === 'gasto').reduce((s, l) => s + Number(l.valor), 0) - reembolsos)
   const saldo = entradas - gastos
   const titulo = `${MESES[mes.getMonth()][0].toUpperCase()}${MESES[mes.getMonth()].slice(1)} de ${mes.getFullYear()}`
@@ -140,8 +146,24 @@ export default function Dinheiro() {
       <div className="resumo-dinheiro">
         <div className="cartao"><span className="suave">Entradas</span><strong className="valor-entrada">{reais(entradas)}</strong></div>
         <div className="cartao"><span className="suave">Gastos</span><strong>{reais(gastos)}</strong></div>
-        <div className="cartao"><span className="suave">Saldo do mês</span><strong className={saldo < 0 ? 'valor-negativo' : 'valor-entrada'}>{reais(saldo)}</strong></div>
+        <div className="cartao"><span className="suave">Saldo do mês</span><strong className={saldo < 0 ? 'valor-negativo' : 'valor-entrada'}>{reais(saldo)}</strong><span className="suave mini">entradas − gastos do mês</span></div>
       </div>
+      {contasCorrente.length > 0 && (
+        <div className="cartao saldo-conta">
+          <div>
+            <span className="suave">Saldo nas contas hoje</span>
+            <strong>{reais(naConta)}</strong>
+            <span className="suave mini">{porBanco.map(([b, v]) => `${b} ${reais(v)}`).join(' · ')}{atualizadoContas ? ` · dados do banco de ${new Date(atualizadoContas).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}</span>
+          </div>
+          {faltaAp > 0 && (
+            <div className="saldo-conta-seu">
+              <span className="suave">Seu, tirando o AP</span>
+              <strong className="valor-entrada">{reais(naConta - faltaAp)}</strong>
+              <span className="suave mini">{reais(faltaAp)} ainda é do AP</span>
+            </div>
+          )}
+        </div>
+      )}
       {maeMes && (
         <button type="button" className="aviso-mae" onClick={() => setAba('mae')}>
           <span>{maeMes.falta > 0 ? <>Falta pagar no AP: <strong>{reais(maeMes.falta)}</strong></> : <>AP deste mês: <strong>tudo pago</strong></>}</span>
