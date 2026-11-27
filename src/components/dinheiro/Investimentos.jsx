@@ -12,7 +12,28 @@ const SUBTIPOS = { TREASURY: 'Tesouro', CDB: 'CDB', LCI: 'LCI', LCA: 'LCA', LC: 
 // Tesouro Direto vira um grupo próprio (Pluggy manda como renda fixa, subtipo TREASURY)
 const ehTesouro = (i) => i.subtipo === 'TREASURY' || /tesouro/i.test(i.nome || '')
 const nomeTipo = (t) => TIPOS_INV[t] || t
-const grupoDe = (i) => (ehTesouro(i) ? 'Tesouro Direto' : nomeTipo(i.tipo))
+// grupos da aba, por tipo
+const grupoDe = (i) => (ehTesouro(i) ? 'Tesouro Direto'
+  : i.tipo === 'FIXED_INCOME' ? 'CDBs e caixinhas'
+  : i.tipo === 'EQUITY' ? 'Ações'
+  : nomeTipo(i.tipo))
+const ORDEM_GRUPOS = ['Tesouro Direto', 'CDBs e caixinhas', 'Ações', 'FIIs e ETFs', 'Fundos']
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+// taxa legível: "115 CDI" → "115% do CDI"
+const taxaLegivel = (t) => {
+  if (!t) return null
+  const m = /^([\d.,]+)\s*CDI$/i.exec(String(t).trim())
+  if (m) return `${m[1].replace('.', ',')}% do CDI`
+  if (/^100\s*IPCA$/i.test(String(t).trim())) return null // o nome do título já diz IPCA+
+  return t
+}
+const vence = (i) => (i.vencimento ? `${MESES_CURTOS[deIso(i.vencimento).getMonth()]}/${deIso(i.vencimento).getFullYear()}` : null)
+// nome que aparece: o apelido; senão um nome curto (os CDBs do Nubank vêm todos como "CDB - NU FINANCEIRA...")
+export const nomeInvest = (i) => {
+  if (i.apelido) return i.apelido
+  if (/^CDB - NU FINANCEIRA/i.test(i.nome || '')) return ['CDB Nubank', taxaLegivel(i.taxa)].filter(Boolean).join(' ')
+  return i.nome
+}
 const pct = (v) => `${v >= 0 ? '+' : ''}${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 
 export default function Investimentos() {
@@ -20,6 +41,7 @@ export default function Investimentos() {
   const [novoRF, setNovoRF] = useState(null) // {} = novo; investimento = editar
   const [novaOp, setNovaOp] = useState(false)
   const { atualizar, rodando } = useAtualizarInvest()
+  const [editandoInv, setEditandoInv] = useState(null)
   const manuais = d.investimentos.filter((i) => i.origem === 'manual')
   // atualiza sozinho (índices e cotações) se a última vez foi há mais de 3 horas
   const auto = useRef(false)
@@ -54,11 +76,36 @@ export default function Investimentos() {
     const k = grupoDe(i)
     grupos.set(k, [...(grupos.get(k) || []), i])
   }
-  const lista = [...grupos.entries()].map(([nome, itens]) => ({ nome, itens, soma: itens.reduce((s, i) => s + Number(i.saldo || 0), 0) })).sort((a, b) => b.soma - a.soma)
+  const lista = [...grupos.entries()].map(([nome, itens]) => ({ nome, itens, soma: itens.reduce((s, i) => s + Number(i.saldo || 0), 0) }))
+    .sort((a, b) => (ORDEM_GRUPOS.indexOf(a.nome) + 99) % 99 - (ORDEM_GRUPOS.indexOf(b.nome) + 99) % 99 || b.soma - a.soma)
   const atualizado = ativos.map((i) => i.atualizado_em).sort().pop()
 
   if (!d.investimentos.length) {
     return <>{barra}<div className="cartao"><Vazio>Os investimentos aparecem aqui pelo Open Finance ou quando você lança um à mão.</Vazio></div>{janelas}</>
+  }
+  const linha = (i) => {
+    const ap = Number(i.aplicado ?? i.saldo)
+    // ações do Open Finance vêm sem o preço de compra (aplicado = saldo): o rendimento fica sem dado
+    const semCusto = i.tipo === 'EQUITY' && i.origem !== 'manual' && Number(i.aplicado) === Number(i.saldo)
+    const ganhoR = Number(i.saldo) - ap
+    const r = ap > 0 ? ganhoR / ap : 0
+    const peso = total ? Number(i.saldo) / total : 0
+    return (
+      <div key={i.id} className="investimento">
+        <div className="investimento-textos">
+          <strong>{nomeInvest(i)}</strong>
+          <span className="suave">{[i.apelido ? i.nome.replace(/ - .*/, '') : null, i.instituicao, i.tipo === 'EQUITY' || nomeInvest(i).includes(taxaLegivel(i.taxa) || '§') ? null : taxaLegivel(i.taxa), vence(i) ? `vence ${vence(i)}` : null].filter(Boolean).join(' · ')}</span>
+          {i.grupo !== 'mae' && <span className="peso-barra" aria-hidden="true"><i style={{ width: `${Math.max(2, peso * 100)}%` }} /></span>}
+        </div>
+        <div className="investimento-valores">
+          <strong>{reais(i.saldo)}</strong>
+          {semCusto && <span className="suave mini">rendimento: o banco não informa o preço de compra</span>}
+          {i.aplicado != null && !semCusto && <span className={ganhoR < 0 ? 'valor-negativo' : 'valor-entrada'}>{ganhoR >= 0 ? '+' : '−'}{reais(Math.abs(ganhoR))} ({pct(r)})</span>}
+          {i.grupo !== 'mae' && <span className="suave mini">{(peso * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% da carteira</span>}
+        </div>
+        <button type="button" className="btn-icone btn-mini" aria-label={`Editar ${nomeInvest(i)}`} onClick={() => setEditandoInv(i)}><Icone nome="editar" tamanho={16} /></button>
+      </div>
+    )
   }
   return (
     <>
@@ -68,46 +115,31 @@ export default function Investimentos() {
         <div className="cartao"><span className="suave">Total aplicado</span><strong>{reais(aplicado)}</strong></div>
         <div className="cartao"><span className="suave">Rendeu</span><strong className={ganho < 0 ? 'valor-negativo' : 'valor-entrada'}>{reais(ganho)}{aplicado > 0 ? ` (${pct(ganho / aplicado)})` : ''}</strong></div>
       </div>
+      <div className="grade-hoje">
+        <PizzaCarteira grupos={lista} total={total} />
+        <Evolucao />
+      </div>
+      {lista.map((g) => {
+        const apG = g.itens.reduce((s, i) => s + Number(i.aplicado ?? i.saldo ?? 0), 0)
+        const semCustoG = g.itens.every((i) => i.tipo === 'EQUITY' && i.origem !== 'manual' && Number(i.aplicado) === Number(i.saldo))
+        return (
+          <section key={g.nome} className="cartao">
+            <div className="cab-cartao">
+              <h2>{g.nome}</h2>
+              <span className="suave">{reais(g.soma)} · {total ? Math.round((100 * g.soma) / total) : 0}%{semCustoG ? '' : <> · rendeu <span className={g.soma - apG < 0 ? 'valor-negativo' : 'valor-entrada'}>{reais(g.soma - apG)}</span></>}</span>
+            </div>
+            {[...g.itens].sort((a, b) => b.saldo - a.saldo).map(linha)}
+          </section>
+        )
+      })}
       {doAp.length > 0 && (
         <section className="cartao">
           <div className="cab-cartao"><h2>Guardado para o AP</h2><span className="suave">{reais(doAp.reduce((s, i) => s + Number(i.saldo), 0))} · fora do seu patrimônio</span></div>
-          {doAp.map((i) => (
-            <div key={i.id} className="investimento">
-              <div className="investimento-textos"><strong>{i.nome}</strong><span className="suave">{i.instituicao}</span></div>
-              <div className="investimento-valores">
-                <strong>{reais(i.saldo)}</strong>
-                <button type="button" className="btn-texto" onClick={() => salvar('investimentos', { id: i.id, grupo: null })}>não é do AP</button>
-              </div>
-            </div>
-          ))}
+          {doAp.map(linha)}
         </section>
       )}
-      <Evolucao />
       <Rendimentos />
-      <div className="grade-hoje">
-        {lista.map((g) => (
-          <section key={g.nome} className="cartao">
-            <div className="cab-cartao"><h2>{g.nome}</h2><span className="suave">{reais(g.soma)} · {total ? Math.round((100 * g.soma) / total) : 0}%</span></div>
-            {g.itens.sort((a, b) => b.saldo - a.saldo).map((i) => {
-              const ap = Number(i.aplicado ?? i.saldo)
-              const r = ap > 0 ? (Number(i.saldo) - ap) / ap : 0
-              return (
-                <div key={i.id} className="investimento">
-                  <div className="investimento-textos">
-                    <strong>{i.nome}</strong>
-                    <span className="suave">{[i.instituicao, SUBTIPOS[i.subtipo] || i.subtipo, i.taxa, i.vencimento ? `vence ${deIso(i.vencimento).toLocaleDateString('pt-BR')}` : null].filter(Boolean).join(' · ')}</span>
-                  </div>
-                  <div className="investimento-valores">
-                    <strong>{reais(i.saldo)}</strong>
-                    {i.aplicado != null && <span className={r < 0 ? 'valor-negativo' : 'valor-entrada'}>{pct(r)}</span>}
-                    <button type="button" className="btn-texto btn-ap" title="Este investimento guarda dinheiro do AP" onClick={() => salvar('investimentos', { id: i.id, grupo: 'mae' })}>é do AP</button>
-                  </div>
-                </div>
-              )
-            })}
-          </section>
-        ))}
-      </div>
+      {editandoInv && <EditorInvest inv={editandoInv} aoFechar={() => setEditandoInv(null)} />}
       <Manuais aoEditar={setNovoRF} aoMudar={() => atualizar(true)} />
       {atualizado && <p className="suave">Atualizado em {new Date(atualizado).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}. Renda fixa lançada à mão: valor bruto estimado pelos índices do Banco Central.</p>}
       {janelas}
@@ -346,5 +378,66 @@ function Manuais({ aoEditar, aoMudar }) {
         )
       })}
     </section>
+  )
+}
+
+// Pizza da carteira por tipo (cores da paleta, na ordem fixa dos grupos)
+const CORES_TIPO = { 'Tesouro Direto': 'var(--serie-1)', 'CDBs e caixinhas': 'var(--serie-3)', 'Ações': 'var(--serie-2)', 'FIIs e ETFs': 'var(--serie-4)', Fundos: 'var(--serie-7)' }
+function PizzaCarteira({ grupos, total }) {
+  if (!total) return null
+  const R = 42
+  const C = 2 * Math.PI * R
+  let acum = 0
+  const pctT = (v) => `${Math.round((100 * v) / total)}%`
+  return (
+    <section className="cartao">
+      <div className="cab-cartao"><h2>Divisão da carteira</h2><span className="suave">por tipo</span></div>
+      <div className="pizza">
+        <svg viewBox="0 0 120 120" width="170" height="170" role="img" aria-label={`Carteira: ${grupos.map((g) => `${g.nome} ${pctT(g.soma)}`).join(', ')}`}>
+          <circle cx="60" cy="60" r={R} fill="none" stroke="var(--neutro)" strokeWidth="22" />
+          {grupos.map((g) => {
+            const parte = (g.soma / total) * C
+            const el = (
+              <circle key={g.nome} cx="60" cy="60" r={R} fill="none" stroke={CORES_TIPO[g.nome] || 'var(--serie-outros)'} strokeWidth="22"
+                strokeDasharray={`${Math.max(0, parte - (grupos.length > 1 ? 1.2 : 0))} ${C}`} strokeDashoffset={-acum} transform="rotate(-90 60 60)">
+                <title>{`${g.nome}: ${reais(g.soma)} (${pctT(g.soma)})`}</title>
+              </circle>
+            )
+            acum += parte
+            return el
+          })}
+          <text x="60" y="57" textAnchor="middle" fontSize="9" fill="var(--suave)">investido</text>
+          <text x="60" y="71" textAnchor="middle" fontSize="10.5" fontWeight="700" fill="var(--tinta)">{reais(total)}</text>
+        </svg>
+        <ul className="pizza-legenda">
+          {grupos.map((g) => <li key={g.nome}><i style={{ background: CORES_TIPO[g.nome] || 'var(--serie-outros)' }} /><span>{g.nome}</span><strong>{reais(g.soma)}</strong><span className="suave">{pctT(g.soma)}</span></li>)}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+// Apelido e "é do AP" de um investimento
+function EditorInvest({ inv, aoFechar }) {
+  const { salvar } = useDados()
+  const [apelido, setApelido] = useState(inv.apelido || '')
+  const [ap, setAp] = useState(inv.grupo === 'mae')
+  const [salvando, setSalvando] = useState(false)
+  async function enviar(e) {
+    e.preventDefault()
+    setSalvando(true)
+    const ok = await salvar('investimentos', { id: inv.id, apelido: apelido.trim().slice(0, 60) || null, grupo: ap ? 'mae' : null })
+    setSalvando(false)
+    if (ok) aoFechar()
+  }
+  return (
+    <Modal titulo="Editar investimento" aoFechar={aoFechar}
+      rodape={<><div className="espaco" /><button type="button" className="btn btn-sec" onClick={aoFechar}>Cancelar</button><Botao type="submit" form="form-inv" carregando={salvando}>Salvar</Botao></>}>
+      <form id="form-inv" className="form" onSubmit={enviar}>
+        <p className="suave">{inv.nome} · {inv.instituicao} · {reais(inv.saldo)}</p>
+        <Field label="Apelido" hint="Ex.: Reserva de emergência, Caixinha da viagem"><input type="text" value={apelido} maxLength={60} placeholder={nomeInvest({ ...inv, apelido: null })} onChange={(e) => setApelido(e.target.value)} autoFocus /></Field>
+        <label className="check-simples"><input type="checkbox" checked={ap} onChange={(e) => setAp(e.target.checked)} /> É dinheiro do AP (fica fora do seu patrimônio)</label>
+      </form>
+    </Modal>
   )
 }

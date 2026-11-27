@@ -749,3 +749,6 @@ button.gs-bloco:hover { filter: brightness(0.97); outline: 2px solid var(--cor);
 .saldo-conta-seu { padding-left: 24px; border-left: 1px solid var(--linha); }
 @media (max-width: 599px) { .saldo-conta strong { font-size: 20px; } .saldo-conta-seu { padding-left: 0; border-left: 0; } }
 .btn-ap { font-size: 12px; color: var(--suave); padding: 0; min-height: 24px; }
+.peso-barra { display: block; height: 4px; border-radius: 2px; background: var(--neutro); margin-top: 6px; max-width: 220px; overflow: hidden; }
+.peso-barra i { display: block; height: 100%; background: var(--acento); border-radius: 2px; }
+.investimento-valores .mini { font-size: 12px; }
