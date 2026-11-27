@@ -71,8 +71,22 @@ export default function Investimentos() {
   const total = ativos.reduce((s, i) => s + Number(i.saldo || 0), 0)
   const aplicado = ativos.reduce((s, i) => s + Number(i.aplicado ?? i.saldo ?? 0), 0)
   const ganho = total - aplicado
+  // aplicações do mesmo produto (ex.: dois CDB Nubank 115% do CDI) viram uma linha só
+  const juntar = (lista) => {
+    const m = new Map()
+    for (const i of lista) {
+      const k = `${i.instituicao}|${i.tipo}|${nomeInvest(i)}`
+      const x = m.get(k)
+      if (!x) { m.set(k, { ...i, partes: [i] }); continue }
+      x.partes.push(i)
+      x.saldo = Number(x.saldo) + Number(i.saldo)
+      x.aplicado = x.aplicado == null || i.aplicado == null ? null : Number(x.aplicado) + Number(i.aplicado)
+      x.vencimento = [x.vencimento, i.vencimento].filter(Boolean).sort()[0] || null
+    }
+    return [...m.values()]
+  }
   const grupos = new Map()
-  for (const i of ativos) {
+  for (const i of juntar(ativos)) {
     const k = grupoDe(i)
     grupos.set(k, [...(grupos.get(k) || []), i])
   }
@@ -94,7 +108,7 @@ export default function Investimentos() {
       <div key={i.id} className="investimento">
         <div className="investimento-textos">
           <strong>{nomeInvest(i)}</strong>
-          <span className="suave">{[i.apelido ? i.nome.replace(/ - .*/, '') : null, i.instituicao, i.tipo === 'EQUITY' || nomeInvest(i).includes(taxaLegivel(i.taxa) || '§') ? null : taxaLegivel(i.taxa), vence(i) ? `vence ${vence(i)}` : null].filter(Boolean).join(' · ')}</span>
+          <span className="suave">{[i.partes?.length > 1 ? `${i.partes.length} aplicações` : null, i.apelido ? i.nome.replace(/ - .*/, '') : null, i.instituicao, i.tipo === 'EQUITY' || nomeInvest(i).includes(taxaLegivel(i.taxa) || '§') ? null : taxaLegivel(i.taxa), vence(i) ? `${i.partes?.length > 1 ? 'a 1ª vence' : 'vence'} ${vence(i)}` : null].filter(Boolean).join(' · ')}</span>
           {i.grupo !== 'mae' && <span className="peso-barra" aria-hidden="true"><i style={{ width: `${Math.max(2, peso * 100)}%` }} /></span>}
         </div>
         <div className="investimento-valores">
@@ -135,10 +149,9 @@ export default function Investimentos() {
       {doAp.length > 0 && (
         <section className="cartao">
           <div className="cab-cartao"><h2>Guardado para o AP</h2><span className="suave">{reais(doAp.reduce((s, i) => s + Number(i.saldo), 0))} · fora do seu patrimônio</span></div>
-          {doAp.map(linha)}
+          {juntar(doAp).map(linha)}
         </section>
       )}
-      <Rendimentos />
       {editandoInv && <EditorInvest inv={editandoInv} aoFechar={() => setEditandoInv(null)} />}
       <Manuais aoEditar={setNovoRF} aoMudar={() => atualizar(true)} />
       {atualizado && <p className="suave">Atualizado em {new Date(atualizado).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}. Renda fixa lançada à mão: valor bruto estimado pelos índices do Banco Central.</p>}
@@ -426,7 +439,8 @@ function EditorInvest({ inv, aoFechar }) {
   async function enviar(e) {
     e.preventDefault()
     setSalvando(true)
-    const ok = await salvar('investimentos', { id: inv.id, apelido: apelido.trim().slice(0, 60) || null, grupo: ap ? 'mae' : null })
+    let ok = true
+    for (const parte of inv.partes || [inv]) ok = (await salvar('investimentos', { id: parte.id, apelido: apelido.trim().slice(0, 60) || null, grupo: ap ? 'mae' : null })) && ok
     setSalvando(false)
     if (ok) aoFechar()
   }
@@ -434,7 +448,7 @@ function EditorInvest({ inv, aoFechar }) {
     <Modal titulo="Editar investimento" aoFechar={aoFechar}
       rodape={<><div className="espaco" /><button type="button" className="btn btn-sec" onClick={aoFechar}>Cancelar</button><Botao type="submit" form="form-inv" carregando={salvando}>Salvar</Botao></>}>
       <form id="form-inv" className="form" onSubmit={enviar}>
-        <p className="suave">{inv.nome} · {inv.instituicao} · {reais(inv.saldo)}</p>
+        <p className="suave">{inv.nome} · {inv.instituicao} · {reais(inv.saldo)}{inv.partes?.length > 1 ? ` · ${inv.partes.length} aplicações (o apelido vale para todas)` : ''}</p>
         <Field label="Apelido" hint="Ex.: Reserva de emergência, Caixinha da viagem"><input type="text" value={apelido} maxLength={60} placeholder={nomeInvest({ ...inv, apelido: null })} onChange={(e) => setApelido(e.target.value)} autoFocus /></Field>
         <label className="check-simples"><input type="checkbox" checked={ap} onChange={(e) => setAp(e.target.checked)} /> É dinheiro do AP (fica fora do seu patrimônio)</label>
       </form>
